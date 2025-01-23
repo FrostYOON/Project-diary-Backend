@@ -1,0 +1,115 @@
+tags:
+  - name: Auth
+    description: 인증 관련 API
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  message:
+                    type: string
+                    example: Login successful
+        401:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid credentials
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Server error
+
+  /auth/google-login:
+    post:
+      tags:
+        - Authentication
+      summary: User login with Google OAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tokenId:
+                  type: string
+                  description: Google ID token
+                  example: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...
+      responses:
+        200:
+          description: Google login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  message:
+                    type: string
+                    example: Google login successful
+        401:
+          description: Invalid Google token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid Google token
+        500:
+          description: Google login failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Google login failed
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
