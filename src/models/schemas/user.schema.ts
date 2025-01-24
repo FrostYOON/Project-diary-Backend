@@ -1,7 +1,12 @@
 import { Schema } from "mongoose";
-import { IUser, DEPARTMENTS, AUTH_TYPES, USER_ROLES } from "../../types/user.types";
+import {
+  IUser,
+  DEPARTMENTS,
+  AUTH_TYPES,
+  USER_ROLES
+} from "../../types/user.types";
 
-export const UserSchema: Schema<IUser> = new Schema({
+const UserSchema: Schema<IUser> = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String },
   name: { type: String, required: true },
@@ -13,13 +18,13 @@ export const UserSchema: Schema<IUser> = new Schema({
     required: true,
     default: "other",
   },
-  register_type: {
+  registerType: {
     type: String,
     enum: AUTH_TYPES,
     required: true,
     default: "normal",
   },
-  social_id: { type: String },
+  socialId: { type: String },
   role: {
     type: String,
     enum: USER_ROLES,
@@ -34,3 +39,5 @@ UserSchema.statics.isEmailTaken = async function (email, excludeUserId) {
   const user = await this.findOne({ email, _id: { $ne: excludeUserId } });
   return !!user;
 };
+
+export default UserSchema;

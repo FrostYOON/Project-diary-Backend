@@ -27,7 +27,6 @@ const jwtConfig: StrategyOptions = {
   secretOrKey: process.env.JWT_SECRET || '',
 };
 
-
 const googleConfig = {
   clientID: process.env.GOOGLE_CLIENT_ID || '',
   clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',

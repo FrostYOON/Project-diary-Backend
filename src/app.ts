@@ -6,6 +6,10 @@ import passport from 'passport';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import { errorHandler } from './middlewares/error.middleware';
 
 import routes from './routes/api/v1/index';
 // import { passportConfig } from './config/passport';
@@ -13,6 +17,22 @@ import routes from './routes/api/v1/index';
 dotenv.config();
 
 const app = express();
+
+// 보안 미들웨어
+app.use(helmet());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.CLIENT_URL 
+    : 'http://localhost:3000',
+  credentials: true
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15분
+  max: 100 // IP당 최대 요청 수
+});
+app.use('/api', limiter);
 
 // 미들웨어 설정
 app.use(express.json());
@@ -64,5 +84,8 @@ app.use((req, res, next) => {
 
 // 라우트 설정
 app.use('/api/v1', routes);
+
+// 에러 핸들링
+app.use(errorHandler);
 
 export default app;

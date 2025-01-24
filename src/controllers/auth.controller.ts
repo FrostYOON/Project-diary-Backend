@@ -1,37 +1,18 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { User } from "../models";
+import { authService } from "../services/auth.service";
+import { IUserSignup } from "../types/user.types";
+import { ApiResponse } from "../types/response.types";
 
-export const signUpController = async (req: Request, res: Response): Promise<void> => {
-  const { email, password, name, phone, birth, department } = req.body;
+export const signUpController = async (
+  req: Request<{}, {}, IUserSignup>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const user = await User.create({ email, password, name, phone, birth, department });
-    if (!user) {
-      res.status(400).json({ message: '회원가입에 실패했습니다.'});
-      return;
-    }
-
-    res.status(200).json({
-      message: '회원가입에 성공했습니다.',
-      redirectUrl: '/login'
-    });
-
+    const result = await authService.signup(req.body);
+    res.status(201).json(result);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
-}
-
-export const selectUserController = async (req: Request, res: Response): Promise<void> => {
-  const users = await User.find();
-  try {
-    if (!users) {
-      res.status(400).json({ message: '유저 조회에 실패했습니다.'});
-      return;
-    }
-    res.status(200).json({ users });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
-    return;
-  }
-}
+};
