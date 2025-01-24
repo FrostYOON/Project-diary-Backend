@@ -10,8 +10,6 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { errorHandler } from './middlewares/error.middleware';
-
-import authRoutes from './routes/auth.routes';
 import routes from './routes/api/v1/index';
 
 dotenv.config();
@@ -23,7 +21,8 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? process.env.CLIENT_URL 
-    : 'http://localhost:3000',
+    : 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 
@@ -73,9 +72,6 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
-// 라우트 설정
-app.use('/api/auth', authRoutes);
 
 app.use((req, res, next) => {
   if (!req.cookies["token"]) {
