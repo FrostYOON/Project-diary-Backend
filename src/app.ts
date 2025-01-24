@@ -1,9 +1,9 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import passport from 'passport';
-import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import helmet from 'helmet';
@@ -11,8 +11,8 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { errorHandler } from './middlewares/error.middleware';
 
+import authRoutes from './routes/auth.routes';
 import routes from './routes/api/v1/index';
-// import { passportConfig } from './config/passport';
 
 dotenv.config();
 
@@ -73,6 +73,9 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+// 라우트 설정
+app.use('/api/auth', authRoutes);
 
 app.use((req, res, next) => {
   if (!req.cookies["token"]) {

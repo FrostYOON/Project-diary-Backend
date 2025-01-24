@@ -1,10 +1,63 @@
-import { User } from '../models';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import { IUserSignup, IUser } from '../types/user.types';
+import { User } from '../models';
 import { AuthError } from '../types/error';
 import { AuthResponse, ApiResponse } from '../types/response.types';
 import { Profile } from 'passport-google-oauth20';
+
+interface GoogleProfile {
+  email: string;
+  name: string;
+  googleId: string;
+}
+export const authenticateUser = async (email: string, password: string) => {
+
+  const user = await User.findOne({ email });
+  if (!user || !user.password) {
+    throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
+  }
+
+  // JWT 토큰 생성
+  const token = jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    process.env.JWT_SECRET_KEY as string,
+    { expiresIn: process.env.JWT_EXPIRES_IN as string }
+  );
+
+  return { token, user };
+};
+
+export const findOrCreateGoogleUser = async (googleProfile: GoogleProfile) => {
+
+  const { email, name, googleId } = googleProfile;
+
+  let user = await User.findOne({ email, register_type: "google" });
+  if (!user) {
+    user = await User.create({
+      email,
+      name,
+      social_id: googleId,
+      register_type: "google",
+      role: "user", // 기본 역할 설정
+    });
+  }
+
+  // JWT 토큰 생성
+  const token = jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    process.env.JWT_SECRET_KEY as string,
+    { expiresIn: process.env.JWT_EXPIRES_IN as string }
+  );
+
+  return { token, user };
+};
+
 
 class AuthService {
   // 사용자 생성 로직 분리
