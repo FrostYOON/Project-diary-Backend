@@ -1,0 +1,110 @@
+tags:
+  - name: Auth
+    description: 인증 관련 API
+
+paths:
+  /api/v1/auth/signup:
+    post:
+      summary: 일반 회원가입
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+                - phone
+                - birth
+                - department
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: 사용자 이메일
+                password:
+                  type: string
+                  description: 비밀번호 (최소 8자, 영문, 숫자, 특수문자 포함)
+                name:
+                  type: string
+                  description: 사용자 이름 (2자 이상)
+                phone:
+                  type: string
+                  description: 전화번호 (010-XXXX-XXXX 형식)
+                birth:
+                  type: string
+                  format: date
+                  description: 생년월일 (YYYY-MM-DD 형식)
+                department:
+                  type: string
+                  description: 부서명 (2자 이상)
+            example:
+              email: "user@example.com"
+              password: "Password123!"
+              name: "홍길동"
+              phone: "010-1234-5678"
+              birth: "1990-01-01"
+              department: "개발팀"
+      responses:
+        201:
+          description: 회원가입 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  redirectUrl:
+                    type: string
+              example:
+                success: true
+                message: "회원가입이 완료되었습니다."
+                redirectUrl: "/login"
+        400:
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                emailDuplicate:
+                  value:
+                    success: false
+                    message: "이미 등록된 이메일입니다."
+                invalidPassword:
+                  value:
+                    success: false
+                    message: "비밀번호는 최소 8자 이상이며, 영문, 숫자, 특수문자를 포함해야 합니다."
+                invalidPhone:
+                  value:
+                    success: false
+                    message: "올바른 전화번호 형식이 아닙니다."
+                invalidBirth:
+                  value:
+                    success: false
+                    message: "올바른 생년월일 형식이 아닙니다."
+        500:
+          description: 서버 에러
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+              example:
+                success: false
+                message: "서버 오류가 발생했습니다."
