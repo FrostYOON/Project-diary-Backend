@@ -1,13 +1,12 @@
 import { User } from '../models';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { UserSignupData } from '../types';
+import { IUser } from '../types/user.types';
 import { AuthError } from '../types/error';
-import { IUser } from '../models/schemas/user.schema';
 
 class AuthService {
   // 회원가입
-  async signup(userData: UserSignupData) {
+  async signup(userData: IUser) {
     try {
       // 이메일 중복 체크
       const existingUser = await User.findOne({ email: userData.email });
@@ -20,7 +19,6 @@ class AuthService {
         ...userData,
         register_type: userData.register_type || 'normal',
         role: 'user',
-        isProfileComplete: true,
         password: userData.register_type === 'normal' ? 
           await bcrypt.hash(userData.password!, 10) : 
           undefined

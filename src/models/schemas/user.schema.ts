@@ -1,24 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
+import { IUser } from "../../types/user.types";
 import bcrypt from "bcrypt";
-
-export interface IUser extends Document {
-  email: string;
-  password?: string;
-  name: string;
-  phone?: string;
-  birth?: Date;
-  department: Department;
-  register_type: AuthProvider;
-  social_id?: string;
-  role: UserRole;
-  isProfileComplete: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export type Department = "ceo" | "hr" | "sales" | "marketing" | "design" | "development" | "other";
-export type AuthProvider = "normal" | "google";
-export type UserRole = "user" | "manager" | "admin" | "superadmin";
 
 export const UserSchema: Schema<IUser> = new Schema({
   email: { type: String, required: true, unique: true },
