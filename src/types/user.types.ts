@@ -25,9 +25,9 @@ export interface IUserSignup {
   name: string;
   phone?: string;
   birth?: Date;
+  registerType: AuthType;
   department: Department;
   role: UserRole;
-  registerType: AuthType;
   socialId?: string;
 }
 

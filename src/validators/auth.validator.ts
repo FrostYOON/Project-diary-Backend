@@ -19,7 +19,7 @@ const phoneBirthCheck = () => {
   return [
     body('phone')
       .custom((value, { req }) => {
-        if (req.body.register_type === 'normal') {
+        if (req.body.registerType === 'normal') {
         if (!value || !REGEX.PHONE.test(value)) {
           throw new Error('유효하지 않은 전화번호 형식입니다.');
         }
@@ -29,7 +29,7 @@ const phoneBirthCheck = () => {
 
   body('birth')
     .custom((value, { req }) => {
-      if (req.body.register_type === 'normal') {
+      if (req.body.registerType === 'normal') {
         if (!value) {
           throw new Error('생년월일은 필수입니다.');
         }
@@ -55,7 +55,7 @@ export const signUpValidator: ValidationChain[] = [
     .trim(),
 
   // provider에 따른 조건부 검증
-  body('register_type')
+  body('registerType')
     .optional()
     .isIn(['normal', 'google'])
     .withMessage('유효하지 않은 provider입니다.'),
@@ -63,7 +63,7 @@ export const signUpValidator: ValidationChain[] = [
   // local 회원가입일 경우 추가 검증
   body('password')
     .custom((value, { req }) => {
-      if (req.body.register_type === 'normal') {
+      if (req.body.registerType === 'normal') {
         if (!value || value.length < 8) {
           throw new Error('비밀번호는 최소 8자 이상이어야 합니다.');
         }

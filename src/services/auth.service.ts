@@ -37,14 +37,15 @@ export const findOrCreateGoogleUser = async (googleProfile: GoogleProfile) => {
 
   const { email, name, googleId } = googleProfile;
 
-  let user = await User.findOne({ email, register_type: "google" });
+  let user = await User.findOne({ email, registerType: "google" });
   if (!user) {
     user = await User.create({
       email,
       name,
-      social_id: googleId,
-      register_type: "google",
+      socialId: googleId,
+      registerType: "google",
       role: "user", // 기본 역할 설정
+      department: "other"
     });
   }
 
@@ -67,6 +68,8 @@ class AuthService {
       throw new AuthError('이미 등록된 이메일입니다.');
     }
 
+    console.log('userData:', userData); // 회원가입 데이터 확인
+
     const hashedPassword = userData.registerType === 'normal' 
       ? await this.hashPassword(userData.password!)
       : undefined;
@@ -74,7 +77,8 @@ class AuthService {
     return User.create({
       ...userData,
       password: hashedPassword,
-      role: 'user'
+      role: 'user',
+      department: "other"
     });
   }
 
@@ -82,17 +86,16 @@ class AuthService {
   async signup(userData: IUserSignup): Promise<ApiResponse<AuthResponse>> {
     try {
       const user = await this.createUser(userData);
-      const token = this.generateToken(user);
       
       return {
         success: true,
         message: '회원가입이 완료되었습니다.',
         data: {
-          token,
           user: this.formatUserResponse(user)
         }
       };
     } catch (error) {
+      console.error('Signup error details:', error); // 상세 에러 확인
       if (error instanceof AuthError) throw error;
       throw new AuthError('회원가입 처리 중 오류가 발생했습니다.');
     }
@@ -155,10 +158,15 @@ class AuthService {
 
   private formatUserResponse(user: IUser) {
     return {
-      id: user._id.toString(),
       email: user.email,
+      password: user.password,
       name: user.name,
-      role: user.role
+      phone: user.phone,
+      birth: user.birth,
+      registerType: user.registerType,
+      socialId: user.socialId,
+      role: user.role,
+      department: user.department
     };
   }
 }
