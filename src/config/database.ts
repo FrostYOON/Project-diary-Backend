@@ -23,12 +23,14 @@ const connectDB = async () => {
       } catch (error) {
         console.error('MongoDB 연결 재시도 실패:', error);
         process.exit(1);
+        return;
       }
     });
     console.log('MongoDB 연결 성공');
   } catch (error) {
     console.error('MongoDB 연결 실패:', error);
     process.exit(1);
+    return;
   }
 }
 

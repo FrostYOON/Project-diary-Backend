@@ -6,16 +6,33 @@ import morgan from 'morgan';
 import passport from 'passport';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import { errorHandler } from './middlewares/error.middleware';
 
-// import { passportConfig } from './config/passport';
 import authRoutes from './routes/auth.routes';
-// import projectRoutes from './routes/project.routes';
-// import taskRoutes from './routes/task.routes';
-// import userRoutes from './routes/user.routes';
+import routes from './routes/api/v1/index';
 
 dotenv.config();
 
 const app = express();
+
+// 보안 미들웨어
+app.use(helmet());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.CLIENT_URL 
+    : 'http://localhost:3000',
+  credentials: true
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15분
+  max: 100 // IP당 최대 요청 수
+});
+app.use('/api', limiter);
 
 // 미들웨어 설정
 app.use(express.json());
@@ -59,8 +76,19 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // 라우트 설정
 app.use('/api/auth', authRoutes);
-// app.use('/api/projects', projectRoutes);
-// app.use('/api/tasks', taskRoutes);
-// app.use('/api/users', userRoutes);
+
+app.use((req, res, next) => {
+  if (!req.cookies["token"]) {
+    return next();
+  }
+
+  passport.authenticate("jwt", { session: false })(req, res, next);
+});
+
+// 라우트 설정
+app.use('/api/v1', routes);
+
+// 에러 핸들링
+app.use(errorHandler);
 
 export default app;

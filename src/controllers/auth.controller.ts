@@ -1,6 +1,24 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { authenticateUser, findOrCreateGoogleUser } from "../services/auth.service";
+import { authService } from "../services/auth.service";
+import { IUserSignup } from "../types/user.types";
+import { ApiResponse } from "../types/response.types";
 
+// 회원가입
+export const signUpController = async (
+  req: Request<{}, {}, IUserSignup>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const result = await authService.signup(req.body);
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 로그인
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -22,3 +40,6 @@ export const googleLogin = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to authenticate with Google" });
   }
 };
+
+
+
