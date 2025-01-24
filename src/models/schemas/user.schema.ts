@@ -1,6 +1,5 @@
-import mongoose, { Schema } from "mongoose";
-import { IUser } from "../../types/user.types";
-import bcrypt from "bcrypt";
+import { Schema } from "mongoose";
+import { IUser, DEPARTMENTS, AUTH_TYPES, USER_ROLES } from "../../types/user.types";
 
 export const UserSchema: Schema<IUser> = new Schema({
   email: { type: String, required: true, unique: true },
@@ -10,23 +9,28 @@ export const UserSchema: Schema<IUser> = new Schema({
   birth: { type: Date },
   department: {
     type: String,
-    enum: ["ceo", "hr", "sales", "marketing", "design", "development", "other"],
+    enum: DEPARTMENTS,
     required: true,
     default: "other",
   },
   register_type: {
     type: String,
-    enum: ["normal", "google"],
+    enum: AUTH_TYPES,
     required: true,
     default: "normal",
   },
   social_id: { type: String },
   role: {
     type: String,
-    enum: ["user", "manager", "admin", "superadmin"],
+    enum: USER_ROLES,
     required: true,
     default: "user",
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
+
+UserSchema.statics.isEmailTaken = async function (email, excludeUserId) {
+  const user = await this.findOne({ email, _id: { $ne: excludeUserId } });
+  return !!user;
+};
