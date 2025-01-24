@@ -1,5 +1,14 @@
 import { body, ValidationChain } from 'express-validator';
 
+export const loginValidation = [
+  body("email").isEmail().withMessage("이메일 형식이 올바르지 않습니다."),
+  body("password").notEmpty().withMessage("비밀번호를 입력해주세요."),
+];
+
+export const googleLoginValidation = [
+  body("googleToken").notEmpty().withMessage("구글 로그인"),
+];
+
 export const REGEX = {
   PHONE: /^\d{3}-\d{3,4}-\d{4}$/,
   BIRTH: /^(20)\d\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/,
