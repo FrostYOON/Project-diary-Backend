@@ -8,7 +8,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 
 // import { passportConfig } from './config/passport';
-// import authRoutes from './routes/auth.routes';
+import authRoutes from './routes/auth.routes';
 // import projectRoutes from './routes/project.routes';
 // import taskRoutes from './routes/task.routes';
 // import userRoutes from './routes/user.routes';
@@ -58,7 +58,7 @@ const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // 라우트 설정
-// app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 // app.use('/api/projects', projectRoutes);
 // app.use('/api/tasks', taskRoutes);
 // app.use('/api/users', userRoutes);

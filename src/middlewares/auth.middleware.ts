@@ -1,19 +1,19 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { validationResult } from "express-validator";
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.header("Authorization")?.split(" ")[1];
+// 유효성 검사 결과 처리 미들웨어
+export const validate = (req: Request, res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
 
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
+  if (!errors.isEmpty()) {
+    // 유효성 검사 실패 시 400 상태 코드와 에러 배열을 반환
+    res.status(400).json({ errors: errors.array() });
+    return;
   }
 
-  try {
-    const jwtSecretKey = process.env.JWT_SECRET_KEY!;
-    const decoded = jwt.verify(token, jwtSecretKey);
-    req.body.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
-  }
+  // 유효성 검사 통과 시 다음 미들웨어로 넘어감
+  next();
 };
+
+
+
