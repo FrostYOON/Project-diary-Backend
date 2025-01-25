@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { authenticateUser, findOrCreateGoogleUser } from "../services/auth.service";
 import { authService } from "../services/auth.service";
 import { IUserSignup } from "../types/user.types";
-import { ApiResponse } from "../types/response.types";
+import { AuthError } from "../types/error";
 
 // 회원가입
 export const signUpController = async (
@@ -19,27 +18,36 @@ export const signUpController = async (
 };
 
 // 로그인
-export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
+export const loginController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { token, user } = await authenticateUser(email, password);
-    res.status(200).json({ token, user });
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      res.status(400).json({
+        success: false,
+        message: '이메일과 비밀번호를 입력해주세요.'
+      });
+      return;
+    }
+
+    const result = await authService.login(email, password);
+    res.status(200).json(result);
   } catch (error) {
-    res.status(401).json({ message: "Invalid email or password" });
+    if (error instanceof AuthError) {
+      res.status(401).json({
+        success: false,
+        message: error.message
+      });
+      return;
+    }
+    next(error);
   }
 };
 
-export const googleLogin = async (req: Request, res: Response) => {
-  const googleProfile = req.body;
-
-  try {
-    const { token, user } = await findOrCreateGoogleUser(googleProfile);
-    res.status(200).json({ token, user });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to authenticate with Google" });
-  }
-};
 
 
 
