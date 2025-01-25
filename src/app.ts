@@ -3,7 +3,6 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
-import passport from 'passport';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import helmet from 'helmet';
@@ -38,10 +37,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
-app.use(passport.initialize());
-
-// Passport 설정
-// passportConfig();
 
 // 스웨거 설정
 const swaggerOptions = {
@@ -73,13 +68,6 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use((req, res, next) => {
-  if (!req.cookies["token"]) {
-    return next();
-  }
-
-  passport.authenticate("jwt", { session: false })(req, res, next);
-});
 
 // 라우트 설정
 app.use('/api/v1', routes);
