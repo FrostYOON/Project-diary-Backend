@@ -1,0 +1,54 @@
+paths:
+  /api/v1/weather:
+    get:
+      tags:
+        - Weather
+      summary: 전국 주요 도시 날씨 정보 조회
+      description: 서울, 부산 등 주요 도시들의 현재 날씨 정보를 조회합니다.
+      responses:
+        200:
+          description: 날씨 정보 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 전국 날씨 정보 조회 성공
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        city:
+                          type: string
+                          example: Seoul
+                        temp:
+                          type: number
+                          example: 22.5
+                        humidity:
+                          type: number
+                          example: 65
+                        description:
+                          type: string
+                          example: 맑음
+                        icon:
+                          type: string
+                          example: 01d
+        500:
+          description: 서버 오류
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 날씨 정보 조회에 실패했습니다. 

@@ -65,8 +65,8 @@ const swaggerOptions = {
   apis: ['./src/docs/**/*.yaml'],
 };
 
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+const swaggerSpec = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 // 라우트 설정
