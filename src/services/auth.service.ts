@@ -3,62 +3,8 @@ import bcrypt from "bcrypt";
 import { IUserSignup, IUser } from '../types/user.types';
 import { User } from '../models';
 import { AuthError } from '../types/error';
-import { AuthResponse, ApiResponse } from '../types/response.types';
+import { AuthResponse, ApiResponse, LoginResponse } from '../types/response.types';
 import { Profile } from 'passport-google-oauth20';
-
-interface GoogleProfile {
-  email: string;
-  name: string;
-  googleId: string;
-}
-export const authenticateUser = async (email: string, password: string) => {
-
-  const user = await User.findOne({ email });
-  if (!user || !user.password) {
-    throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
-  }
-
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
-  }
-
-  // JWT 토큰 생성
-  const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET_KEY as string,
-    { expiresIn: process.env.JWT_EXPIRES_IN as string }
-  );
-
-  return { token, user };
-};
-
-export const findOrCreateGoogleUser = async (googleProfile: GoogleProfile) => {
-
-  const { email, name, googleId } = googleProfile;
-
-  let user = await User.findOne({ email, registerType: "google" });
-  if (!user) {
-    user = await User.create({
-      email,
-      name,
-      socialId: googleId,
-      registerType: "google",
-      role: "user", // 기본 역할 설정
-      department: "other"
-    });
-  }
-
-  // JWT 토큰 생성
-  const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET_KEY as string,
-    { expiresIn: process.env.JWT_EXPIRES_IN as string }
-  );
-
-  return { token, user };
-};
-
 
 class AuthService {
   // 사용자 생성 로직 분리
@@ -70,13 +16,29 @@ class AuthService {
 
     console.log('userData:', userData); // 회원가입 데이터 확인
 
-    const hashedPassword = userData.registerType === 'normal' 
-      ? await this.hashPassword(userData.password!)
-      : undefined;
+    // 일반 회원가입인 경우 비밀번호 필수
+    if (!userData.registerType || userData.registerType === 'normal') {
+      if (!userData.password) {
+        throw new AuthError('비밀번호가 필요합니다.');
+      }
+      const hashedPassword = await this.hashPassword(userData.password);
+      
+      // password를 제외한 나머지 데이터
+      const { password, ...restUserData } = userData;
 
+      return User.create({
+        ...restUserData,
+        registerType: 'normal',
+        password: hashedPassword,
+        role: 'user',
+        department: "other"
+      });
+    }
+
+    // 소셜 로그인의 경우
+    const { password, ...restUserData } = userData;
     return User.create({
-      ...userData,
-      password: hashedPassword,
+      ...restUserData,
       role: 'user',
       department: "other"
     });
@@ -168,6 +130,64 @@ class AuthService {
       role: user.role,
       department: user.department
     };
+  }
+
+  // 로그인
+  async login(email: string, password: string): Promise<ApiResponse<LoginResponse>> {
+    try {
+      console.log('Login attempt for email:', email);
+      const user = await User.findOne({ email });
+      
+      if (!user) {
+        console.log('User not found with email:', email);
+        throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
+      }
+
+      console.log('Found user:', user);
+      
+      // 비밀번호 필드 확인
+      if (!user.password) {
+        console.error('User found but password is not set');
+        throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
+      }
+
+      // 비밀번호 비교
+      try {
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        console.log('Password validation result:', isPasswordValid);
+        
+        if (!isPasswordValid) {
+          throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
+        }
+      } catch (bcryptError) {
+        console.error('Password comparison error:', bcryptError);
+        throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
+      }
+
+      const accessToken = this.generateToken(user);
+      
+      return {
+        success: true,
+        message: '로그인이 완료되었습니다.',
+        data: {
+          accessToken,
+          user: {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        console.error('Detailed error:', error.message);
+      }
+      throw new AuthError('로그인 처리 중 오류가 발생했습니다.');
+    }
   }
 }
 

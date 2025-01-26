@@ -17,4 +17,13 @@ export interface AuthResponse {
     role: string;
     department: string;
   };
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
 } 
