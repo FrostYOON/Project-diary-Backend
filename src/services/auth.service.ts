@@ -4,44 +4,51 @@ import { IUserSignup, IUser } from '../types/user.types';
 import { User } from '../models';
 import { AuthError } from '../types/error';
 import { AuthResponse, ApiResponse, LoginResponse } from '../types/response.types';
-import { Profile } from 'passport-google-oauth20';
+import { Department } from '../models';
 
 class AuthService {
   // 사용자 생성 로직 분리
   private async createUser(userData: IUserSignup): Promise<IUser> {
-    const isEmailTaken = await User.isEmailTaken(userData.email);
-    if (isEmailTaken) {
-      throw new AuthError('이미 등록된 이메일입니다.');
-    }
-
-    console.log('userData:', userData); // 회원가입 데이터 확인
-
-    // 일반 회원가입인 경우 비밀번호 필수
-    if (!userData.registerType || userData.registerType === 'normal') {
-      if (!userData.password) {
-        throw new AuthError('비밀번호가 필요합니다.');
+    try {
+      const isEmailTaken = await User.isEmailTaken(userData.email);
+      if (isEmailTaken) {
+        throw new AuthError('이미 등록된 이메일입니다.');
       }
-      const hashedPassword = await this.hashPassword(userData.password);
-      
-      // password를 제외한 나머지 데이터
-      const { password, ...restUserData } = userData;
 
+      // 기본 부서('other') 찾기
+      const defaultDepartment = await Department.findOne({ name: 'other' });
+      if (!defaultDepartment) {
+        throw new Error('기본 부서를 찾을 수 없습니다.');
+      }
+
+      // 일반 회원가입인 경우
+      if (!userData.registerType || userData.registerType === 'normal') {
+        if (!userData.password) {
+          throw new AuthError('비밀번호가 필요합니다.');
+        }
+        const hashedPassword = await this.hashPassword(userData.password);
+        
+        const { password, ...restUserData } = userData;
+        return User.create({
+          ...restUserData,
+          registerType: 'normal',
+          password: hashedPassword,
+          role: 'user',
+          department: defaultDepartment._id  // 기본 부서 ID 설정
+        });
+      }
+
+      // 소셜 로그인의 경우
+      const { password, ...restUserData } = userData;
       return User.create({
         ...restUserData,
-        registerType: 'normal',
-        password: hashedPassword,
         role: 'user',
-        department: "other"
+        department: defaultDepartment._id  // 기본 부서 ID 설정
       });
+    } catch (error) {
+      console.error('User creation error:', error);
+      throw error;
     }
-
-    // 소셜 로그인의 경우
-    const { password, ...restUserData } = userData;
-    return User.create({
-      ...restUserData,
-      role: 'user',
-      department: "other"
-    });
   }
 
   // 회원가입
