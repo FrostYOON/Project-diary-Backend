@@ -10,13 +10,14 @@ import {
   validateDepartmentId,
   validateDepartmentData 
 } from '../../../validators/department.validator';
+import { adminCheck } from '../../../middlewares/department.middleware';
 
 const router = express.Router();
 
 router.get('/', getDepartmentController);
-router.post('/', validateDepartmentData, createDepartmentController);
+router.post('/', [adminCheck, validateDepartmentData], createDepartmentController);
 router.get('/:id', validateDepartmentId, getDepartmentByIdController);
-router.put('/:id', [validateDepartmentId, validateDepartmentData], updateDepartmentController);
-router.delete('/:id', validateDepartmentId, deleteDepartmentController);
+router.put('/:id', [adminCheck, validateDepartmentId, validateDepartmentData], updateDepartmentController);
+router.delete('/:id', [adminCheck, validateDepartmentId], deleteDepartmentController);
 
 export default router;

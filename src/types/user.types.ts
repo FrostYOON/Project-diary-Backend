@@ -21,6 +21,7 @@ export interface IUserSignup {
 
 // DB 모델용 타입
 export interface IUser extends Document<Types.ObjectId> {
+  _id: Types.ObjectId;
   email: string;
   password?: string;
   name: string;

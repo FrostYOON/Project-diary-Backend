@@ -34,8 +34,6 @@ class WeatherService {
         throw new Error('날씨 API 키가 설정되지 않았습니다.');
       }
 
-      console.log(process.env.WEATHER_API_KEY);
-
       const weatherPromises = this.cities.map(city => 
         axios.get(process.env.WEATHER_API_URL!, {
           params: {

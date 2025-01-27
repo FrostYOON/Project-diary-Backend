@@ -1,13 +1,12 @@
 import { Department } from "../models";
 import { IDepartment } from "../types/department.types";
 import { ApiResponse } from "../types/response.types";
-import mongoose from 'mongoose';
 
 class DepartmentService {
   // 부서 생성
-  async createDepartment(departmentData: Partial<IDepartment>): Promise<ApiResponse> {
+  async createDepartment(data: IDepartment): Promise<ApiResponse> {
     try {
-      const department = await Department.create(departmentData);
+      const department = await Department.create(data);
       return {
         success: true,
         message: '부서가 생성되었습니다.',
@@ -21,7 +20,7 @@ class DepartmentService {
   // 전체 부서 조회
   async getAllDepartments(): Promise<ApiResponse> {
     try {
-      const departments = await Department.find();
+      const departments = await Department.find().sort({ name: 1 });
       return {
         success: true,
         message: '부서 목록 조회 성공',
@@ -41,6 +40,7 @@ class DepartmentService {
         return {
           success: false,
           message: '해당 부서를 찾을 수 없습니다.',
+          status: 404
         };
       }
 
@@ -50,22 +50,22 @@ class DepartmentService {
         data: { department }
       };
     } catch (error) {
-      console.error('부서 조회 에러:', error);
       throw new Error('부서 조회 중 오류가 발생했습니다.');
     }
   }
 
   // 부서 정보 수정
-  async updateDepartment(id: string, updateData: Partial<IDepartment>): Promise<ApiResponse> {
+  async updateDepartment(id: string, data: IDepartment): Promise<ApiResponse> {
     try {
-      const department = await Department.findByIdAndUpdate(
-        id,
-        updateData,
-        { new: true }
-      );
+      const department = await Department.findByIdAndUpdate(id, data, { new: true });
       if (!department) {
-        throw new Error('해당 부서를 찾을 수 없습니다.');
+        return {
+          success: false,
+          message: '해당 부서를 찾을 수 없습니다.',
+          status: 404
+        };
       }
+      
       return {
         success: true,
         message: '부서 정보가 수정되었습니다.',
@@ -81,7 +81,11 @@ class DepartmentService {
     try {
       const department = await Department.findByIdAndDelete(id);
       if (!department) {
-        throw new Error('해당 부서를 찾을 수 없습니다.');
+        return {
+          success: false,
+          message: '해당 부서를 찾을 수 없습니다.',
+          status: 404
+        };
       }
       return {
         success: true,
