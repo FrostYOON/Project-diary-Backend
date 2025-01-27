@@ -18,14 +18,11 @@ const config = {
 
 const jwtConfig: StrategyOptions = {
   jwtFromRequest: ExtractJwt.fromExtractors([
-    (req: Request) => {
-      if (req?.cookies?.accessToken) {
-        return req.cookies.accessToken;
-      }
-      return null;
-    },
+    ExtractJwt.fromAuthHeaderAsBearerToken(),
+    ExtractJwt.fromUrlQueryParameter('token'),
+    (req) => req?.cookies?.accessToken || null,
   ]),
-  secretOrKey: process.env.JWT_SECRET || '',
+  secretOrKey: process.env.JWT_SECRET || 'fallback-secret',
 };
 
 // Google OAuth 설정
@@ -88,6 +85,19 @@ passport.use(new LocalStrategy(
     }
   }
 ));
+
+// JWT Strategy 설정
+passport.use(new JwtStrategy(jwtConfig, async (payload, done) => {
+  try {
+    const user = await User.findById(payload.id);
+    if (!user) {
+      return done(null, false);
+    }
+    return done(null, user);
+  } catch (error) {
+    return done(error, false);
+  }
+}));
 
 export default passport;
 
