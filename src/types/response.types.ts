@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 export interface ApiResponse<T = any> {
   success: boolean;
   message: string;
@@ -15,7 +17,7 @@ export interface AuthResponse {
     registerType?: string;
     socialId?: string;
     role: string;
-    department?: string;
+    department?: Types.ObjectId;
   };
 }
 

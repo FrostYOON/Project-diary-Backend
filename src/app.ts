@@ -55,17 +55,10 @@ const swaggerOptions = {
         url: 'http://localhost:3001',
       },
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
-    },
   },
-  apis: ['./src/docs/**/*.yaml'],
+  apis: [
+    './src/docs/**/*.yaml',  // 모든 yaml 파일 포함
+  ],
 };
 
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
