@@ -3,6 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import passport from 'passport';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import helmet from 'helmet';
@@ -10,6 +11,7 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { errorHandler } from './middlewares/error.middleware';
 import routes from './routes/api/v1/index';
+import './config/passport';  // Passport 설정 import
 
 dotenv.config();
 
@@ -37,6 +39,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
+app.use(passport.initialize());  // Passport 초기화
 
 // 스웨거 설정
 const swaggerOptions = {

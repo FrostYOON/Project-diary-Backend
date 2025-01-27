@@ -3,6 +3,7 @@ import { authService } from "../services/auth.service";
 import { IUserSignup } from "../types/user.types";
 import { AuthError } from "../types/error";
 
+
 // 회원가입
 export const signUpController = async (
   req: Request<{}, {}, IUserSignup>,
@@ -48,6 +49,19 @@ export const loginController = async (
   }
 };
 
+// 구글 로그인
+export const googleLoginController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const result = await authService.googleLogin(req.body);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 

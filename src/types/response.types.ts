@@ -5,7 +5,7 @@ export interface ApiResponse<T = any> {
 }
 
 export interface AuthResponse {
-  token?: string;
+  accessToken?: string;
   user: {
     email: string;
     password?: string;
@@ -20,7 +20,7 @@ export interface AuthResponse {
 }
 
 export interface LoginResponse {
-  accessToken: string;
+  accessToken?: string;
   user: {
     id: string;
     email: string;
