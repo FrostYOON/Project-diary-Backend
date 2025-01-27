@@ -64,34 +64,47 @@ class AuthService {
   }
 
   // 구글 회원가입/로그인
-  async googleSignup(profile: Profile): Promise<ApiResponse<AuthResponse>> {
+  async googleSignup(profile: any): Promise<ApiResponse<LoginResponse>> {
     try {
-      const existingUser = await User.findOne({
-        email: profile._json.email,
+      // 기존 사용자 확인
+      let user = await User.findOne({
+        email: profile.emails[0].value,
         registerType: 'google'
       });
 
-      const user = existingUser || await this.createUser({
-        email: profile._json.email!,
-        name: profile._json.name!,
-        registerType: 'google',
-        socialId: profile.id,
-        department: 'other',
-        role: 'user'
-      });
+      // 새 사용자 생성
+      if (!user) {
+        user = await User.create({
+          email: profile.emails[0].value,
+          name: profile.displayName,
+          registerType: 'google',
+          socialId: profile.id,
+          department: 'other', // 기본값
+          role: 'user' // 기본값
+        });
+      }
 
-      const token = this.generateToken(user);
-      
+      // JWT 토큰 생성
+      const accessToken = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET || 'fallback-secret',
+        { expiresIn: '24h' }
+      );
+
       return {
         success: true,
-        message: '구글 로그인이 완료되었습니다.',
+        message: '구글 로그인 성공',
         data: {
-          token,
-          user: this.formatUserResponse(user)
+          accessToken: accessToken,
+          user: {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name
+          }
         }
       };
     } catch (error) {
-      if (error instanceof AuthError) throw error;
+      console.error('Google signup error:', error);
       throw new AuthError('구글 로그인 처리 중 오류가 발생했습니다.');
     }
   }
@@ -187,6 +200,77 @@ class AuthService {
         console.error('Detailed error:', error.message);
       }
       throw new AuthError('로그인 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 구글 로그인
+  async googleLogin(tokenId: string): Promise<ApiResponse<LoginResponse>> {
+    try {
+      // Google OAuth 클라이언트로 토큰 검증
+      const ticket = await this.verifyGoogleToken(tokenId);
+      const payload = ticket.getPayload();
+      
+      if (!payload || !payload.email) {
+        throw new AuthError('구글 인증 정보가 올바르지 않습니다.');
+      }
+
+      // 기존 구글 계정 사용자 확인
+      let user = await User.findOne({ 
+        email: payload.email,
+        registerType: 'google'
+      });
+
+      // 없으면 새로 생성
+      if (!user) {
+        const userData = {
+          email: payload.email,
+          name: payload.name || payload.email.split('@')[0],
+          registerType: 'google' as const,
+          socialId: payload.sub,
+          role: 'user' as const,
+          department: 'other' as const
+        };
+        
+        user = await User.create(userData);
+      }
+
+      if (!user) {
+        throw new AuthError('사용자 생성에 실패했습니다.');
+      }
+
+      const accessToken = this.generateToken(user);
+
+      return {
+        success: true,
+        message: '구글 로그인이 완료되었습니다.',
+        data: {
+          accessToken,
+          user: {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Google login error:', error);
+      if (error instanceof AuthError) throw error;
+      throw new AuthError('구글 로그인 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  private async verifyGoogleToken(tokenId: string) {
+    const { OAuth2Client } = require('google-auth-library');
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    
+    try {
+      return await client.verifyIdToken({
+        idToken: tokenId,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+    } catch (error) {
+      console.error('Token verification error:', error);
+      throw new AuthError('구글 토큰이 유효하지 않습니다.');
     }
   }
 }
