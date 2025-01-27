@@ -1,11 +1,19 @@
 import express from 'express';
+import {
+  getTaskController,
+  createTaskController,
+  getTaskByIdController,
+  updateTaskController,
+  deleteTaskController
+} from '../../../controllers/task.controller';
+import { validateTaskData, validateTaskId } from '../../../validators/task.validator';
 
 const router = express.Router();
 
-router.get('/')
-router.post('/')
-router.get('/:id')
-router.put('/:id')
-router.delete('/:id')
+router.get('/', getTaskController);
+router.post('/', validateTaskData, createTaskController);
+router.get('/:id', validateTaskId, getTaskByIdController);
+router.put('/:id', validateTaskId, validateTaskData, updateTaskController);
+router.delete('/:id', validateTaskId, deleteTaskController);
 
 export default router;

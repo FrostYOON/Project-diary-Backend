@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import { ITask } from "../../types/task.types";
+import { ITask, TASK_STATUS, TASK_TAGS } from "../../types/task.types";
 
 const TaskSchema: Schema<ITask> = new Schema({
   title: { type: String, required: true },
@@ -9,10 +9,10 @@ const TaskSchema: Schema<ITask> = new Schema({
   status: {
     type: String,
     required: true,
-    enum: ["준비", "진행중", "완료", "보류"],
+    enum: TASK_STATUS,
   },
-  tag: { type: String },
-  project: { type: Schema.Types.ObjectId, ref: "Project", required: true },
+  tag: { type: String, enum: TASK_TAGS },
+  project: { type: Schema.Types.ObjectId, ref: "Project" },
   author: { type: Schema.Types.ObjectId, ref: "User", required: true },
 });
 

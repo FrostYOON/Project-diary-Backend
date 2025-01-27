@@ -1,21 +1,49 @@
 tags:
   - name: Tasks
-    description: 태스크 관리 API
+    description: 업무 관리 API
 
 paths:
   /api/v1/tasks:
     get:
-      summary: 태스크 목록 조회
+      summary: 자신의 업무 목록 조회
       tags: [Tasks]
-      parameters:
-        - in: query
-          name: projectId
-          schema:
-            type: string
-            format: objectId
+      responses:
+        200:
+          description: 업무 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "업무 목록 조회 성공"
+                  data:
+                    type: object
+                    properties:
+                      tasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Task'
+        401:
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "로그인이 필요합니다."
     
     post:
-      summary: 태스크 생성
+      summary: 업무 생성
       tags: [Tasks]
       requestBody:
         required: true
@@ -29,7 +57,6 @@ paths:
                 - endDate
                 - status
                 - project
-                - author
               properties:
                 title:
                   type: string
@@ -49,9 +76,69 @@ paths:
                 project:
                   type: string
                   format: objectId
-                author:
-                  type: string
-                  format: objectId
+
+  /api/v1/tasks/{id}:
+    get:
+      summary: 특정 업무 조회
+      tags: [Tasks]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: 업무 ID
+      responses:
+        200:
+          description: 업무 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      task:
+                        $ref: '#/components/schemas/Task'
+        401:
+          description: 인증 실패
+        403:
+          description: 권한 없음
+        404:
+          description: 업무 없음
+    
+    put:
+      summary: 업무 수정 (자신이 생성한 업무만 가능)
+      tags: [Tasks]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: 업무 ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+    
+    delete:
+      summary: 업무 삭제 (자신이 생성한 업무만 가능)
+      tags: [Tasks]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: 업무 ID
 
 components:
   schemas:
@@ -81,34 +168,29 @@ components:
         author:
           type: string
           format: objectId
-
-  /api/v1/tasks/{id}:
-    get:
-      summary: 태스크 상세 조회
-      tags: [Tasks]
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
     
-    put:
-      summary: 태스크 수정
-      tags: [Tasks]
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-    
-    delete:
-      summary: 태스크 삭제
-      tags: [Tasks]
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string 
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: ['준비', '진행중', '완료', '보류']
+        tag:
+          type: string
+        project:
+          type: string
+          format: objectId 
