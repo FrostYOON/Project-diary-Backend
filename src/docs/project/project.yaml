@@ -51,7 +51,7 @@ paths:
                 status:
                   type: string
                   enum: ['준비', '진행중', '완료', '보류']
-                manager:
+                members:
                   type: array
                   items:
                     type: string
@@ -123,7 +123,7 @@ components:
         status:
           type: string
           enum: ['준비', '진행중', '완료', '보류']
-        manager:
+        members:
           type: array
           items:
             type: string

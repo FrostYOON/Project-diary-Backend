@@ -1,13 +1,19 @@
-import { Schema } from "mongoose";
-import { IProject } from "../../types/project.types";
+import mongoose, { Schema } from 'mongoose';
 
-const ProjectSchema: Schema<IProject> = new Schema({
+
+const ProjectSchema = new Schema({
   title: { 
     type: String, 
     required: true 
   },
+  department: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Department',
+    required: true
+  }],
   description: { 
-    type: String
+    type: String, 
+    required: true 
   },
   startDate: { 
     type: Date, 
@@ -19,20 +25,29 @@ const ProjectSchema: Schema<IProject> = new Schema({
   },
   status: { 
     type: String, 
-    required: true,
-    enum: ['준비', '진행중', '완료', '보류']
+    enum: ['준비', '진행중', '완료', '보류'],
+    default: '준비',
+    required: true
   },
-  manager: [{ 
+  members: [{ 
     type: Schema.Types.ObjectId, 
-    ref: "User"
+    ref: 'User',
+    required: true
   }],
   author: { 
     type: Schema.Types.ObjectId, 
     ref: "User", 
     required: true 
+  },
+  progress: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
   }
 }, {
-  timestamps: true  // createdAt, updatedAt 자동 생성
+  timestamps: true
 });
 
+export const Project = mongoose.model('Project', ProjectSchema);
 export default ProjectSchema;

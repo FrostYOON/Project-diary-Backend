@@ -1,4 +1,4 @@
-import { Department } from "../models";
+import { Department } from "../models/schemas/department.schema";
 import { IDepartment } from "../types/department.types";
 import { ApiResponse } from "../types/response.types";
 
