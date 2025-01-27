@@ -1,8 +1,8 @@
-import { Schema } from "mongoose";
-import { IDepartment, DEPARTMENTS } from "../../types/department.types";
+import mongoose, { Schema } from 'mongoose';
 
-const DepartmentSchema: Schema<IDepartment> = new Schema({
-  name: { type: String, required: true, enum: DEPARTMENTS },
+const departmentSchema = new Schema({
+  name: { type: String, required: true, unique: true }
 });
 
-export default DepartmentSchema;
+export const Department = mongoose.model('Department', departmentSchema);
+export default departmentSchema;
