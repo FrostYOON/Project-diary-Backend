@@ -1,0 +1,77 @@
+tags:
+  - name: Departments
+    description: 부서 관리 API
+
+paths:
+  /api/v1/departments:
+    get:
+      summary: 부서 목록 조회
+      tags: [Departments]
+    
+    post:
+      summary: 부서 생성
+      tags: [Departments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  enum: ['ceo', 'hr', 'sales', 'marketing', 'design', 'development', 'other']
+
+  /api/v1/departments/{id}:
+    get:
+      summary: 부서 상세 정보
+      tags: [Departments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+    
+    put:
+      summary: 부서 정보 수정
+      tags: [Departments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+    
+    delete:
+      summary: 부서 삭제
+      tags: [Departments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+components:
+  schemas:
+    Department:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+          enum: ['ceo', 'hr', 'sales', 'marketing', 'design', 'development', 'other']
+        code:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time 
