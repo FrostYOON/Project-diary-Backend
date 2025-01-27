@@ -52,6 +52,8 @@ passport.use(
           ...result.data.user,
           accessToken: result.data.accessToken // accessToken으로 수정
         };
+
+        console.log(userWithToken);
         
         return done(null, userWithToken);
       } catch (error) {
