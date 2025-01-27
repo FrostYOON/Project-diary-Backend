@@ -3,6 +3,7 @@ import { IUser } from "./user.types";
 
 
 export interface IProject extends Document<Types.ObjectId> {
+  _id: Types.ObjectId;
   title: string;
   department: Types.ObjectId;
   description: string;
