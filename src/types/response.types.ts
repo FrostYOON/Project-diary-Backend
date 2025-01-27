@@ -15,7 +15,7 @@ export interface AuthResponse {
     registerType?: string;
     socialId?: string;
     role: string;
-    department: string;
+    department?: string;
   };
 }
 

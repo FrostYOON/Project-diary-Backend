@@ -1,20 +1,8 @@
 import { Document, Model, Types } from "mongoose";
 
-// 상수로 관리하면 재사용성과 유지보수성이 향상됩니다
-export const DEPARTMENTS = [
-  'ceo',
-  'hr',
-  'sales',
-  'marketing',
-  'design',
-  'development',
-  'other'
-] as const;
+export const AUTH_TYPES = ['normal', 'google'];
+export const USER_ROLES = ['user', 'manager', 'admin'];
 
-export const AUTH_TYPES = ['normal', 'google'] as const;
-export const USER_ROLES = ['user', 'manager', 'admin', 'superAdmin'] as const;
-
-export type Department = typeof DEPARTMENTS[number];
 export type AuthType = typeof AUTH_TYPES[number];
 export type UserRole = typeof USER_ROLES[number];
 
@@ -26,7 +14,7 @@ export interface IUserSignup {
   phone?: string;
   birth?: Date;
   registerType: AuthType;
-  department: Department;
+  department?: Types.ObjectId;
   role: UserRole;
   socialId?: string;
 }
@@ -38,7 +26,7 @@ export interface IUser extends Document<Types.ObjectId> {
   name: string;
   phone?: string;
   birth?: Date;
-  department: Department;
+  department?: Types.ObjectId;
   registerType: AuthType;
   socialId?: string;
   role: UserRole;
