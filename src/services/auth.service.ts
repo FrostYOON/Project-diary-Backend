@@ -79,19 +79,24 @@ class AuthService {
         registerType: 'google'
       });
 
-      // 새 사용자 생성
       if (!user) {
+        // 기본 부서('other') 찾기
+        const defaultDepartment = await Department.findOne({ name: 'other' });
+        if (!defaultDepartment) {
+          throw new AuthError('기본 부서를 찾을 수 없습니다.');
+        }
+
+        // 새 사용자 생성
         user = await User.create({
           email: profile.emails[0].value,
           name: profile.displayName,
           registerType: 'google',
           socialId: profile.id,
-          department: 'other', // 기본값
-          role: 'user' // 기본값
+          department: defaultDepartment._id,  // other 부서의 ObjectId
+          role: 'user'
         });
       }
 
-      // JWT 토큰 생성
       const accessToken = jwt.sign(
         { id: user._id },
         process.env.JWT_SECRET || 'fallback-secret',
@@ -102,7 +107,7 @@ class AuthService {
         success: true,
         message: '구글 로그인 성공',
         data: {
-          accessToken: accessToken,
+          accessToken,
           user: {
             id: user._id.toString(),
             email: user.email,

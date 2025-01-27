@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import { Request } from 'express';
 import { authService } from '../services/auth.service';
+import { IUser } from '../types/user.types';
 
 dotenv.config();
 
@@ -50,10 +51,8 @@ passport.use(
         // user 객체에 accessToken 추가
         const userWithToken = {
           ...result.data.user,
-          accessToken: result.data.accessToken // accessToken으로 수정
-        };
-
-        console.log(userWithToken);
+          accessToken: result.data.accessToken
+        } as unknown as IUser;
         
         return done(null, userWithToken);
       } catch (error) {
