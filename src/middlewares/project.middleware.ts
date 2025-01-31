@@ -21,13 +21,17 @@ export const validateProject = (req: Request, res: Response, next: NextFunction)
 
 // 프로젝트 존재 유무
 export const checkProjectExists = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const projectId = req.params.projectId;
+  try {
+    const projectId = req.params.id;
     const project = await Project.findById(projectId);
     if (!project) {
-        res.status(404).json({ message: '프로젝트를 찾을 수 없습니다.' });
-        return;
+      res.status(404).json({ message: '프로젝트를 찾을 수 없습니다.' });
+      return;
     }
     next();
+  } catch (error) {
+    next(error);
+  }
 };
 
 // 프로젝트 생성, 수정, 삭제 시 manager, admin 권한 확인

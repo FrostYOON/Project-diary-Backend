@@ -1,17 +1,16 @@
 import mongoose, { Schema } from 'mongoose';
-import { IProject } from '../../types/project.types';
 
 
-const ProjectSchema = new Schema<IProject>({
+const ProjectSchema = new Schema({
   title: { 
     type: String, 
     required: true 
   },
-  department: [{
+  department: {
     type: Schema.Types.ObjectId,
     ref: 'Department',
     required: true
-  }],
+  },
   description: { 
     type: String, 
     required: true 
