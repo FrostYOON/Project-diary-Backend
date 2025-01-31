@@ -1,12 +1,14 @@
 tags:
   - name: Users
-    description: 사용자 관리 API
+    description: 사용자 관련 API
 
 paths:
   /api/v1/users:
     get:
-      summary: 전체 사용자 목록 조회
+      summary: 전체 사용자 조회
       tags: [Users]
+      security:
+        - bearerAuth: []
       responses:
         200:
           description: 사용자 목록 조회 성공
@@ -22,18 +24,15 @@ paths:
                     type: string
                     example: "사용자 목록 조회 성공"
                   data:
-                    type: object
-                    properties:
-                      users:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/User'
-        500:
-          description: 서버 오류
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
     
     post:
-      summary: 사용자 생성
+      summary: 사용자 추가
       tags: [Users]
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -43,63 +42,147 @@ paths:
               required:
                 - email
                 - name
-                - registerType
+                - department
                 - role
               properties:
                 email:
                   type: string
-                  format: email
-                password:
-                  type: string
+                  example: "user@example.com"
                 name:
                   type: string
-                phone:
-                  type: string
-                birth:
-                  type: string
-                  format: date
-                registerType:
-                  type: string
-                  enum: ['normal', 'google']
+                  example: "홍길동"
                 department:
                   type: string
-                  format: objectId
+                  example: "507f1f77bcf86cd799439012"
                 role:
                   type: string
-                  enum: ['user', 'manager', 'admin']
-                socialId:
-                  type: string
+                  enum: [user, manager, admin]
+                  example: "user"
+      responses:
+        201:
+          description: 사용자 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
 
   /api/v1/users/{id}:
     get:
-      summary: 사용자 상세 정보
+      summary: 특정 사용자 조회
       tags: [Users]
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
+          description: 사용자 ID
+      responses:
+        200:
+          description: 사용자 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
     
     put:
       summary: 사용자 정보 수정
       tags: [Users]
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
+          description: 사용자 ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "홍길동"
+                department:
+                  type: string
+                  example: "507f1f77bcf86cd799439012"
+                role:
+                  type: string
+                  enum: [user, manager, admin]
+                  example: "user"
+      responses:
+        200:
+          description: 사용자 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
     
     delete:
       summary: 사용자 삭제
       tags: [Users]
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
+          description: 사용자 ID
+      responses:
+        200:
+          description: 사용자 삭제 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "사용자가 삭제되었습니다."
+
+  /api/v1/users/me/department:
+    get:
+      summary: 내 부서 정보 조회
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: 부서 정보 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "부서 정보 조회 성공"
+                  data:
+                    type: object
+                    properties:
+                      department:
+                        type: object
+                        properties:
+                          _id:
+                            type: string
+                            example: "507f1f77bcf86cd799439012"
+                          name:
+                            type: string
+                            example: "개발팀"
 
 components:
   schemas:
@@ -108,25 +191,41 @@ components:
       properties:
         _id:
           type: string
+          example: "507f1f77bcf86cd799439011"
         email:
           type: string
+          example: "user@example.com"
         name:
           type: string
-        phone:
-          type: string
-        birth:
-          type: string
-          format: date
+          example: "홍길동"
         department:
-          type: string
-          format: objectId
-        registerType:
-          type: string
-          enum: ['normal', 'google']
+          type: object
+          properties:
+            _id:
+              type: string
+              example: "507f1f77bcf86cd799439012"
+            name:
+              type: string
+              example: "개발팀"
         role:
           type: string
-          enum: ['user', 'manager', 'admin']
+          enum: [user, manager, admin]
+          example: "user"
         createdAt:
           type: string
+          format: date-time
         updatedAt:
-          type: string 
+          type: string
+          format: date-time
+
+    UserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "사용자 조회 성공"
+        data:
+          $ref: '#/components/schemas/User' 

@@ -1,13 +1,13 @@
 import express from 'express';
 import passport from 'passport';
-import { signUpController, loginController } from '../../../controllers/auth.controller';
+import { signUpController } from '../../../controllers/auth.controller';
 import { signUpValidator } from '../../../validators/auth.validator';
 import jwt from 'jsonwebtoken';
 import { IUser } from '../../../types/user.types';
 
 const router = express.Router();
 
-// 회원가입
+// 회원가입 - JWT 인증 제거
 router.post('/signup', signUpValidator, signUpController);
 
 // 일반 로그인
