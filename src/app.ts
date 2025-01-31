@@ -12,6 +12,7 @@ import cors from 'cors';
 import { errorHandler } from './middlewares/error.middleware';
 import routes from './routes/api/v1/index';
 import './config/passport';  // Passport 설정 import
+import { customLogger } from './middlewares/logger.middleware';
 
 dotenv.config();
 
@@ -27,6 +28,14 @@ app.use(cors({
   credentials: true
 }));
 
+// 캐시 비활성화 미들웨어 추가
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15분
@@ -38,7 +47,8 @@ app.use('/api', limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(morgan('dev'));
+// app.use(morgan('dev'));
+app.use(customLogger);
 app.use(passport.initialize());  // Passport 초기화
 
 // 스웨거 설정
