@@ -1,4 +1,5 @@
 import { Project } from "../models/schemas/project.schema";
+import { Types } from "mongoose";
 
 
 // 프로젝트 목록 조회
@@ -69,3 +70,37 @@ export const getProjectById = async (id: string) => {
     }
     return project;
 };
+
+class ProjectService {
+  // 부서와 사용자 ID로 프로젝트 필터링
+  async getProjectsByDepartmentAndUser(departmentId: string, userId: string) {
+    try {
+      // departmentId와 userId 유효성 검사
+      if (!Types.ObjectId.isValid(departmentId) || !Types.ObjectId.isValid(userId)) {
+        return {
+          success: false,
+          message: '유효하지 않은 ID입니다.',
+          status: 400
+        };
+      }
+
+      const projects = await Project.find({
+        department: departmentId,
+        members: userId
+      })
+      .select('_id title')  // 프로젝트 ID와 제목만 선택
+      .lean();  // 성능 최적화를 위해 일반 객체로 변환
+
+      return {
+        success: true,
+        message: '프로젝트 조회 성공',
+        data: { projects }
+      };
+    } catch (error) {
+      console.error('Project lookup error:', error);
+      throw new Error('프로젝트 조회 중 오류가 발생했습니다.');
+    }
+  }
+}
+
+export const projectService = new ProjectService();

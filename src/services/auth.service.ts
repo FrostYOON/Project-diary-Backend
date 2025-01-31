@@ -7,6 +7,43 @@ import { AuthResponse, ApiResponse, LoginResponse } from '../types/response.type
 import { Department } from '../models';
 
 class AuthService {
+  // 유틸리티 메서드들
+  private async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
+  }
+
+  private generateToken(user: IUser): string {
+    if (!process.env.JWT_SECRET) {
+      throw new AuthError('JWT_SECRET is not defined');
+    }
+    
+    return jwt.sign(
+      { 
+        id: user._id.toString(),
+        email: user.email.toString(),
+        name: user.name.toString(),
+        role: user.role.toString(),
+        departmentId: user.department?.toString()
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+  }
+
+  private formatUserResponse(user: IUser) {
+    return {
+      email: user.email,
+      password: user.password,
+      name: user.name,
+      phone: user.phone,
+      birth: user.birth,
+      registerType: user.registerType,
+      socialId: user.socialId,
+      role: user.role,
+      department: user.department
+    };
+  }
+
   // 사용자 생성 로직 분리
   private async createUser(userData: IUserSignup): Promise<IUser> {
     try {
@@ -147,43 +184,7 @@ class AuthService {
       throw new AuthError('구글 로그인 처리 중 오류가 발생했습니다.');
     }
   }
-
-  // 유틸리티 메서드들
-  private async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, 10);
-  }
-
-  private generateToken(user: IUser): string {
-    if (!process.env.JWT_SECRET) {
-      throw new AuthError('JWT_SECRET is not defined');
-    }
-    
-    return jwt.sign(
-      { 
-        id: user._id.toString(),
-        email: user.email,
-        name: user.name,
-        role: user.role 
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-  }
-
-  private formatUserResponse(user: IUser) {
-    return {
-      email: user.email,
-      password: user.password,
-      name: user.name,
-      phone: user.phone,
-      birth: user.birth,
-      registerType: user.registerType,
-      socialId: user.socialId,
-      role: user.role,
-      department: user.department
-    };
-  }
-
+  
   // 로그인
   async login(email: string, password: string): Promise<ApiResponse<LoginResponse>> {
     try {

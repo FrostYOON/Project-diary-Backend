@@ -6,14 +6,13 @@ import {
   getUserByIdController,
   updateUserController,
   deleteUserController,
-  getUserDepartmentController
+  getMeController
 } from '../../../controllers/user.controller';
 
 const router = Router();
 const authenticateJWT = passport.authenticate('jwt', { session: false });
 
-// 내 부서 정보 조회 (먼저 정의)
-router.get('/me/department', authenticateJWT, getUserDepartmentController);
+router.get('/me', authenticateJWT, getMeController);
 
 // CRUD 라우트
 router.post('/', authenticateJWT, createUserController);
