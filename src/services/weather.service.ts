@@ -10,6 +10,7 @@ interface WeatherData {
 }
 
 class WeatherService {
+
   private readonly cities = [
     { name: 'Seoul', lat: 37.5665, lon: 126.9780 },      // 서울
     { name: 'Incheon', lat: 37.4563, lon: 126.7052 },    // 인천
