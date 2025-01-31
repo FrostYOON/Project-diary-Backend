@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { createProject, getProjectList, updateProject, deleteProject, getProjectById } from '../services/project.service';
 import { IUser } from '../types/user.types';
+import { Project } from '../models';
 
 
 interface AuthenticatedRequest extends Request {
@@ -26,18 +27,26 @@ export const getProjectListController = async (
 };
 
 // 프로젝트 상세 조회
-export const getProjectByIdController = async (
-  req: Request, 
-  res: Response, 
-  next: NextFunction
-) => {
+export const getProjectByIdController: RequestHandler = async (req, res, next) => {
   try {
     const projectId = req.params.id;
-    const project = await getProjectById(projectId);
+    const project = await Project.findById(projectId)
+      .populate('department', 'name')
+      .populate('members', 'name email')
+      .populate('author', 'name email');
+
+    if (!project) {
+      res.status(404).json({
+        success: false,
+        message: '프로젝트를 찾을 수 없습니다.'
+      });
+      return;
+    }
+
     res.status(200).json({
       success: true,
-      message: '프로젝트 상세가 조회되었습니다.',
-      data: project
+      message: '프로젝트 상세 조회 성공',
+      data: { project }
     });
   } catch (error) {
     next(error);
@@ -79,15 +88,20 @@ export const createProjectController: RequestHandler<{}, any, any, any, { user: 
 };
 
 // 프로젝트 수정
-export const updateProjectController = async (req: Request, res: Response) => {
+export const updateProjectController: RequestHandler = async (req, res, next) => {
+  try {
     const projectId = req.params.id;
-    const project = req.body;
-    const updatedProject = await updateProject(projectId, project);
+    const updateData = req.body;
+    const result = await updateProject(projectId, updateData);
+    
     res.status(200).json({
       success: true,
       message: '프로젝트가 수정되었습니다.',
-      data: updatedProject
+      data: { project: result }
     });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // 프로젝트 삭제

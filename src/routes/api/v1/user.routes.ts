@@ -1,24 +1,29 @@
 import { Router } from 'express';
 import passport from 'passport';
 import { 
-  getUserListController, 
+  createUserController,
+  getAllUsersController,
+  getUserByIdController,
+  updateUserController,
+  deleteUserController,
+  getUserDepartmentController,
   getUsersByDepartmentController
 } from '../../../controllers/user.controller';
 
 const router = Router();
-
 const authenticateJWT = passport.authenticate('jwt', { session: false });
 
-// 모든 라우트에 인증 미들웨어 적용
-router.use(authenticateJWT);
+// 내 부서 정보 조회 (가장 구체적인 경로)
+router.get('/me/department', authenticateJWT, getUserDepartmentController);
 
-// 사용자 목록 조회
-router.get('/', getUserListController);
+// 부서별 사용자 조회 (두 번째로 구체적인 경로)
+router.get('/department/:departmentId', authenticateJWT, getUsersByDepartmentController);
 
-// 부서별 사용자 목록 조회
-router.get('/department/:departmentId', getUsersByDepartmentController);
-
-// 사용자 상세 조회
-router.get('/:id', getUsersByDepartmentController);
+// 일반적인 CRUD 라우트
+router.post('/', authenticateJWT, createUserController);
+router.get('/', authenticateJWT, getAllUsersController);
+router.get('/:id', authenticateJWT, getUserByIdController);
+router.put('/:id', authenticateJWT, updateUserController);
+router.delete('/:id', authenticateJWT, deleteUserController);
 
 export default router;

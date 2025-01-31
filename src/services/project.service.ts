@@ -1,4 +1,5 @@
-import { Project } from "../models/schemas/project.schema";
+import { Project, Department } from "../models";
+import mongoose from 'mongoose';
 
 
 // 프로젝트 목록 조회
@@ -11,18 +12,34 @@ export const getProjectList = async () => {
 
 // 프로젝트 생성
 export const createProject = async (projectData: any) => {
-    // author는 현재 로그인한 사용자의 ID로 설정
-    if (!projectData.author) {
-      throw new Error('작성자 정보가 필요합니다.');
+  try {
+    // department 처리
+    if (projectData.department === 'other') {
+      const otherDepartment = await Department.findOne({ name: 'other' });
+      if (!otherDepartment) {
+        throw new Error('기본 부서를 찾을 수 없습니다.');
+      }
+      projectData.department = otherDepartment._id;
+    } else if (!mongoose.Types.ObjectId.isValid(projectData.department)) {
+      throw new Error('유효하지 않은 부서 ID입니다.');
     }
-
 
     // members가 없으면 빈 배열로 초기화
     if (!projectData.members) {
       projectData.members = [];
     }
 
-    return Project.create(projectData);
+    // author 확인
+    if (!projectData.author) {
+      throw new Error('작성자 정보가 필요합니다.');
+    }
+
+    const project = await Project.create(projectData);
+    return project;
+  } catch (error) {
+    console.error('프로젝트 생성 에러:', error);
+    throw error;
+  }
 };
 
 // 프로젝트 수정
@@ -31,8 +48,8 @@ export const updateProject = async (id: string, updateData: any) => {
     delete updateData.author;
     
     const project = await Project.findByIdAndUpdate(
-      id,
-      updateData,
+      id, 
+      updateData, 
       { 
         new: true,
         runValidators: true

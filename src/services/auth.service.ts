@@ -54,17 +54,44 @@ class AuthService {
   // 회원가입
   async signup(userData: IUserSignup): Promise<ApiResponse<AuthResponse>> {
     try {
-      const user = await this.createUser(userData);
-      
+      // 부서 이름으로 부서 ID 찾기
+      const department = await Department.findOne({ name: 'other' });
+      if (!department) {
+        return {
+          success: false,
+          message: '존재하지 않는 부서입니다.',
+          status: 400
+        };
+      }
+
+      // 비밀번호 해시화
+      const hashedPassword = await bcrypt.hash(userData.password || '', 10);
+
+      // 사용자 생성 시 부서 ID 저장
+      const user = await User.create({
+        ...userData,
+        department: department._id,  // 부서 이름을 ID로 변환
+        registerType: 'normal',
+        password: hashedPassword
+      });
+
+      const accessToken = this.generateToken(user);
+
       return {
         success: true,
         message: '회원가입이 완료되었습니다.',
         data: {
-          user: this.formatUserResponse(user)
+          accessToken,
+          user: {
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            department: user.department
+          }
         }
       };
     } catch (error) {
-      console.error('Signup error details:', error); // 상세 에러 확인
+      console.error('Signup error details:', error);
       if (error instanceof AuthError) throw error;
       throw new AuthError('회원가입 처리 중 오류가 발생했습니다.');
     }
