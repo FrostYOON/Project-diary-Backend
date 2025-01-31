@@ -3,7 +3,6 @@ import { Project } from "../models/schemas/project.schema";
 
 // 프로젝트 목록 조회
 export const getProjectList = async () => {
-    
     return Project.find()
       .populate('department', 'name')
       .populate('members', 'name')

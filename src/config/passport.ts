@@ -8,7 +8,6 @@ import dotenv from 'dotenv';
 import { Request } from 'express';
 import { authService } from '../services/auth.service';
 import { IUser } from '../types/user.types';
-
 dotenv.config();
 
 const config = {
@@ -18,11 +17,14 @@ const config = {
 
 const jwtConfig: StrategyOptions = {
   jwtFromRequest: ExtractJwt.fromExtractors([
-    ExtractJwt.fromAuthHeaderAsBearerToken(),
-    ExtractJwt.fromUrlQueryParameter('token'),
-    (req) => req?.cookies?.accessToken || null,
+    (req: Request) => {
+      if (req?.cookies?.accessToken) {
+        return req.cookies.accessToken;
+      }
+      return null;
+    },
   ]),
-  secretOrKey: process.env.JWT_SECRET || 'fallback-secret',
+  secretOrKey: process.env.JWT_SECRET || '',
 };
 
 // Google OAuth 설정
@@ -87,17 +89,19 @@ passport.use(new LocalStrategy(
 ));
 
 // JWT Strategy 설정
-passport.use(new JwtStrategy(jwtConfig, async (payload, done) => {
-  try {
-    const user = await User.findById(payload.id);
-    if (!user) {
+passport.use(
+  new JwtStrategy(jwtConfig, async (jwtPayload, done) => {
+    try {
+      const user = await User.findById(jwtPayload.id);
+      if (user) {
+        return done(null, user);
+      }
       return done(null, false);
+    } catch (error) {
+      return done(error, false);
     }
-    return done(null, user);
-  } catch (error) {
-    return done(error, false);
-  }
-}));
+  })
+);
 
 export default passport;
 
