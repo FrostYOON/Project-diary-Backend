@@ -1,74 +1,91 @@
-import { Project } from "../models/schemas/project.schema";
-import { Types } from "mongoose";
+import { Project, Department } from "../models";
+import mongoose, { Types } from 'mongoose';
 
 
 // 프로젝트 목록 조회
 export const getProjectList = async () => {
-    
-    return Project.find()
-      .populate('department', 'name')
-      .populate('members', 'name')
-      .populate('author', 'name');
+  return Project.find()
+    .populate('department', 'name')
+    .populate('members', 'name')
+    .populate('author', 'name');
 };
 
 // 프로젝트 생성
 export const createProject = async (projectData: any) => {
-    // author는 현재 로그인한 사용자의 ID로 설정
-    if (!projectData.author) {
-      throw new Error('작성자 정보가 필요합니다.');
+  try {
+    // department 처리
+    if (projectData.department === 'other') {
+      const otherDepartment = await Department.findOne({ name: 'other' });
+      if (!otherDepartment) {
+        throw new Error('기본 부서를 찾을 수 없습니다.');
+      }
+      projectData.department = otherDepartment._id;
+    } else if (!mongoose.Types.ObjectId.isValid(projectData.department)) {
+      throw new Error('유효하지 않은 부서 ID입니다.');
     }
-
 
     // members가 없으면 빈 배열로 초기화
     if (!projectData.members) {
       projectData.members = [];
     }
 
-    return Project.create(projectData);
+    // author 확인
+    if (!projectData.author) {
+      throw new Error('작성자 정보가 필요합니다.');
+    }
+
+    const project = await Project.create(projectData);
+    return project;
+  } catch (error) {
+    console.error('프로젝트 생성 에러:', error);
+    throw error;
+  }
 };
 
 // 프로젝트 수정
 export const updateProject = async (id: string, updateData: any) => {
-    // author 필드는 수정 불가능하도록
-    delete updateData.author;
-    
-    const project = await Project.findByIdAndUpdate(
-      id,
-      updateData,
-      { 
-        new: true,
-        runValidators: true
-      }
-    )
+  // author 필드는 수정 불가능하도록
+  delete updateData.author;
+
+  const project = await Project.findByIdAndUpdate(
+    id,
+    updateData,
+    {
+      new: true,
+      runValidators: true
+    }
+  )
     .populate('department', 'name')
     .populate('members', 'name')
     .populate('author', 'name');
-    
-    if (!project) {
-      throw new Error('프로젝트를 찾을 수 없습니다.');
-    }
-    return project;
+
+  if (!project) {
+    throw new Error('프로젝트를 찾을 수 없습니다.');
+  }
+  return project;
 };
 
 // 프로젝트 삭제
 export const deleteProject = async (id: string) => {
-    const project = await Project.findByIdAndDelete(id);
-    if (!project) {
-      throw new Error('프로젝트를 찾을 수 없습니다.');
-    }
-    return project;
+  const project = await Project.findByIdAndDelete(id);
+  if (!project) {
+    throw new Error('프로젝트를 찾을 수 없습니다.');
+  }
+  return project;
 };
 
+// 프로젝트 상세 조회
 export const getProjectById = async (id: string) => {
-    const project = await Project.findById(id)
-      .populate('department', 'name')
-      .populate('members', 'name')
-      .populate('author', 'name');
-    
-    if (!project) {
-      throw new Error('프로젝트를 찾을 수 없습니다.');
-    }
-    return project;
+  const project = await Project.findById(id)
+    .populate('department', 'name')
+    .populate('members', 'name email')
+    .populate('author', 'name email')
+    .lean();
+  
+  if (!project) {
+    throw new Error('프로젝트를 찾을 수 없습니다.');
+  }
+  return project;
 };
 
 class ProjectService {
@@ -88,8 +105,8 @@ class ProjectService {
         department: departmentId,
         members: userId
       })
-      .select('_id title')  // 프로젝트 ID와 제목만 선택
-      .lean();  // 성능 최적화를 위해 일반 객체로 변환
+        .select('_id title')  // 프로젝트 ID와 제목만 선택
+        .lean();  // 성능 최적화를 위해 일반 객체로 변환
 
       return {
         success: true,
