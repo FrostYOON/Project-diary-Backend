@@ -4,15 +4,33 @@ import { ApiResponse } from "../types/response.types";
 
 class TaskService {
   // 태스크 생성
-  async createTask(data: ITask): Promise<ApiResponse> {
+  async createTask(taskData: any): Promise<ApiResponse> {
     try {
-      const task = await Task.create(data);
+      // 필수 필드 검증
+      if (!taskData.title || !taskData.projectId) {
+        return {
+          success: false,
+          message: '제목과 프로젝트 ID는 필수 항목입니다.',
+          status: 400
+        };
+      }
+
+      const task = await Task.create({
+        ...taskData,
+        project: taskData.projectId  // projectId를 project 필드로 매핑
+      });
+      
+      const populatedTask = await Task.findById(task._id)
+        .populate('author', 'name')
+        .populate('project', 'title');
+
       return {
         success: true,
         message: '업무가 생성되었습니다.',
-        data: { task }
+        data: { task: populatedTask }
       };
     } catch (error) {
+      console.error('Task creation service error:', error);
       throw new Error('업무 생성 중 오류가 발생했습니다.');
     }
   }
@@ -61,9 +79,21 @@ class TaskService {
   }
 
   // 업무 수정
-  async updateTask(id: string, data: ITask): Promise<ApiResponse> {
+  async updateTask(taskId: string, taskData: any): Promise<ApiResponse> {
     try {
-      const task = await Task.findByIdAndUpdate(id, data, { new: true });
+      console.log('Update Task Service Data:', taskData);  // 서비스 레이어 데이터 로깅
+
+      const task = await Task.findByIdAndUpdate(
+        taskId,
+        {
+          ...taskData,
+          project: taskData.projectId || taskData.project  // projectId나 project 둘 다 허용
+        },
+        { new: true }
+      )
+      .populate('author', 'name')
+      .populate('project', 'title');
+
       if (!task) {
         return {
           success: false,
@@ -74,10 +104,11 @@ class TaskService {
 
       return {
         success: true,
-        message: '업무 정보가 수정되었습니다.',
+        message: '업무가 수정되었습니다.',
         data: { task }
       };
     } catch (error) {
+      console.error('Task update service error:', error);
       throw new Error('업무 수정 중 오류가 발생했습니다.');
     }
   }

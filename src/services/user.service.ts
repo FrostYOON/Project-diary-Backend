@@ -107,10 +107,14 @@ class UserService {
     }
   }
 
-  async getUserDepartment(userId: string): Promise<ApiResponse> {
+  // 내 정보 조회
+  async getMyInfo(userId: string): Promise<ApiResponse> {
     try {
-      const user = await User.findById(userId).populate('department', 'name');
-      
+      const user = await User.findById(userId)
+        .select('-password -socialId')
+        .populate('department', 'name')
+        .lean();
+
       if (!user) {
         return {
           success: false,
@@ -121,13 +125,24 @@ class UserService {
 
       return {
         success: true,
-        message: '부서 정보 조회 성공',
-        data: {
-          department: user.department
+        message: '내 정보 조회 성공',
+        data: { 
+          user: {
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            birth: user.birth,
+            department: user.department,
+            role: user.role,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+          }
         }
       };
     } catch (error) {
-      throw new Error('부서 정보 조회 중 오류가 발생했습니다.');
+      console.error('User info lookup error:', error);
+      throw new Error('사용자 정보 조회 중 오류가 발생했습니다.');
     }
   }
 }

@@ -6,6 +6,7 @@ import {
   createProjectController, 
   updateProjectController, 
   deleteProjectController,
+  getProjectsByDepartmentAndUserController,
 } from '../../../controllers/project.controller';
 import { checkProjectExists, checkProjectPermission } from '../../../middlewares/project.middleware';
 
@@ -30,5 +31,8 @@ router.put('/:id', checkProjectExists, checkProjectPermission, updateProjectCont
 
 // 프로젝트 삭제
 router.delete('/:id', checkProjectExists, checkProjectPermission, deleteProjectController);
+
+// 부서와 사용자별 프로젝트 조회
+router.get('/', getProjectsByDepartmentAndUserController);
 
 export default router;
