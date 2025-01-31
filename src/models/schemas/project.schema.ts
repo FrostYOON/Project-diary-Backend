@@ -6,11 +6,11 @@ const ProjectSchema = new Schema({
     type: String, 
     required: true 
   },
-  department: [{
+  department: {
     type: Schema.Types.ObjectId,
     ref: 'Department',
     required: true
-  }],
+  },
   description: { 
     type: String, 
     required: true 

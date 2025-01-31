@@ -1,4 +1,4 @@
-import { Document, Model, Types } from "mongoose";
+import { Document, Types } from "mongoose";
 import { IUser } from "./user.types";
 
 
@@ -9,6 +9,7 @@ export interface IProject extends Document<Types.ObjectId> {
   description: string;
   startDate: Date;
   endDate: Date;
+  members: Types.ObjectId[];
   status: '준비' | '진행중' | '완료' | '보류';
   createdAt: Date;
   updatedAt: Date;

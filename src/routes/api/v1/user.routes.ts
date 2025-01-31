@@ -6,7 +6,7 @@ import {
   getUserByIdController,
   updateUserController,
   deleteUserController,
-  getUserDepartmentController,
+  getMeController,
   getUsersByDepartmentController
 } from '../../../controllers/user.controller';
 
@@ -14,7 +14,7 @@ const router = Router();
 const authenticateJWT = passport.authenticate('jwt', { session: false });
 
 // 내 부서 정보 조회 (가장 구체적인 경로)
-router.get('/me/department', authenticateJWT, getUserDepartmentController);
+router.get('/me', authenticateJWT, getMeController);
 
 // 부서별 사용자 조회 (두 번째로 구체적인 경로)
 router.get('/department/:departmentId', authenticateJWT, getUsersByDepartmentController);
