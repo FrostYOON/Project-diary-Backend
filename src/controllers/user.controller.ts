@@ -19,23 +19,6 @@ export const selectUserController = async (
   }
 };
 
-export const getUserDepartmentController: RequestHandler = async (req, res, next) => {
-  try {
-    if (!req.user) {
-      res.status(401).json({
-        success: false,
-        message: '로그인이 필요합니다.'
-      });
-      return;
-    }
-
-    const result = await userService.getUserDepartment(req.user._id.toString());
-    res.json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const createUserController: RequestHandler = async (req, res, next) => {
   try {
     const result = await userService.createUser(req.body);
@@ -87,6 +70,24 @@ export const deleteUserController: RequestHandler = async (req, res, next) => {
       res.status(result.status).json(result);
       return;
     }
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 내 정보 조회 컨트롤러
+export const getMeController: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user?._id) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
+      return;
+    }
+
+    const result = await userService.getMyInfo(req.user._id.toString());
     res.json(result);
   } catch (error) {
     next(error);

@@ -1,6 +1,6 @@
 import { Document, Types } from "mongoose";
 
-export const TASK_STATUS = ['준비', '진행', '완료', '보류'];
+export const TASK_STATUS = ['대기', '진행중', '완료', '보류'];
 export const TASK_TAGS = ['기획', '디자인', '개발', '마케팅', '기타'];
 export const TASK_PRIORITY = ['낮음', '보통', '높음'];
 export type TaskStatus = typeof TASK_STATUS[number];

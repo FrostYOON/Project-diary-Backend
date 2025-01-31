@@ -1,11 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { createProject, getProjectList, updateProject, deleteProject, getProjectById } from '../services/project.service';
+import { createProject, getProjectList, updateProject, deleteProject, getProjectById, projectService } from '../services/project.service';
 import { IUser } from '../types/user.types';
-
-
-interface AuthenticatedRequest extends Request {
-    user: IUser;
-  }
 
 // 프로젝트 목록 조회
 export const getProjectListController = async (
@@ -98,4 +93,32 @@ export const deleteProjectController = async (req: Request, res: Response) => {
       success: true,
       message: '프로젝트가 삭제되었습니다.'
     });
+};
+
+export const getProjectsByDepartmentAndUserController: RequestHandler = async (req, res, next) => {
+  try {
+    const { departmentId, userId } = req.query;
+
+    if (!departmentId || !userId) {
+      res.status(400).json({
+        success: false,
+        message: 'departmentId와 userId는 필수 파라미터입니다.'
+      });
+      return;
+    }
+
+    const result = await projectService.getProjectsByDepartmentAndUser(
+      departmentId as string,
+      userId as string
+    );
+
+    if (result.status) {
+      res.status(result.status).json(result);
+      return;
+    }
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 };
