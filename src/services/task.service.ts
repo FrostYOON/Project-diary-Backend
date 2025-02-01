@@ -81,7 +81,6 @@ class TaskService {
   // 업무 수정
   async updateTask(taskId: string, taskData: any): Promise<ApiResponse> {
     try {
-      console.log('Update Task Service Data:', taskData);  // 서비스 레이어 데이터 로깅
 
       const task = await Task.findByIdAndUpdate(
         taskId,

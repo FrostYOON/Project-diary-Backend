@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
-import { Strategy as JwtStrategy, ExtractJwt, StrategyOptions } from 'passport-jwt';
+import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { Strategy as GoogleStrategy, StrategyOptionsWithRequest } from 'passport-google-oauth20';
 import { User } from '../models';
 import bcrypt from 'bcrypt';
@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { Request } from 'express';
 import { authService } from '../services/auth.service';
 import { IUser } from '../types/user.types';
+import jwt from 'jsonwebtoken';
 dotenv.config();
 
 const config = {
@@ -15,16 +16,9 @@ const config = {
   passwordField: 'password',
 }
 
-const jwtConfig: StrategyOptions = {
-  jwtFromRequest: ExtractJwt.fromExtractors([
-    (req: Request) => {
-      if (req?.cookies?.accessToken) {
-        return req.cookies.accessToken;
-      }
-      return null;
-    },
-  ]),
-  secretOrKey: process.env.JWT_SECRET || '',
+const jwtOptions = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.JWT_SECRET || 'fallback-secret'
 };
 
 // Google OAuth 설정
@@ -89,19 +83,20 @@ passport.use(new LocalStrategy(
 ));
 
 // JWT Strategy 설정
-passport.use(
-  new JwtStrategy(jwtConfig, async (jwtPayload, done) => {
-    try {
-      const user = await User.findById(jwtPayload.id);
-      if (user) {
-        return done(null, user);
-      }
+passport.use(new JwtStrategy(jwtOptions, async (payload, done) => {
+  try {
+    const user = await User.findById(payload.id);
+    
+    if (!user) {
       return done(null, false);
-    } catch (error) {
-      return done(error, false);
     }
-  })
-);
+
+    return done(null, user);
+  } catch (error) {
+    console.error('JWT Strategy Error:', error);
+    return done(error, false);
+  }
+}));
 
 export default passport;
 
