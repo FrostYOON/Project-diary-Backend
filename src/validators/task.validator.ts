@@ -17,7 +17,6 @@ export const validateTaskId = (req: Request, res: Response, next: NextFunction):
 };
 
 export const validateTaskData = (req: Request, res: Response, next: NextFunction): void => {
-  console.log('Validating task data:', req.body);  // 데이터 로깅
   const { title, description, startDate, endDate, status, priority, tag, projectId } = req.body;
 
   // 각 필드별 유효성 검사 결과 로깅
@@ -31,8 +30,6 @@ export const validateTaskData = (req: Request, res: Response, next: NextFunction
     tag: tag && TASK_TAGS.includes(tag),
     projectId: !!projectId
   };
-
-  console.log('Validation results:', validationResults);
 
   const errors = [];
 

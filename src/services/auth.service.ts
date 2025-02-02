@@ -188,7 +188,6 @@ class AuthService {
   // 로그인
   async login(email: string, password: string): Promise<ApiResponse<LoginResponse>> {
     try {
-      console.log('Login attempt for email:', email);
       const user = await User.findOne({ email });
       
       if (!user) {
@@ -196,8 +195,6 @@ class AuthService {
         throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
 
-      console.log('Found user:', user);
-      
       // 비밀번호 필드 확인
       if (!user.password) {
         console.error('User found but password is not set');
@@ -207,7 +204,6 @@ class AuthService {
       // 비밀번호 비교
       try {
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        console.log('Password validation result:', isPasswordValid);
         
         if (!isPasswordValid) {
           throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
