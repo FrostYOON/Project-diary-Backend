@@ -1,13 +1,31 @@
 import { Project, Department } from "../models";
 import mongoose, { Types } from 'mongoose';
 
+export const createApiResponse = {
+  success: (message: string, data?: any) => ({
+    success: true,
+    message,
+    data
+  }),
+  
+  error: (message: string, status: number = 500) => ({
+    success: false,
+    message,
+    status
+  })
+};
+
+export const populateProjectFields = (query: any) => {
+  return query
+    .populate('department', 'name')
+    .populate('members', 'name email')
+    .populate('author', 'name email');
+};
 
 // 프로젝트 목록 조회
 export const getProjectList = async () => {
-  return Project.find()
-    .populate('department', 'name')
-    .populate('members', 'name')
-    .populate('author', 'name');
+  return populateProjectFields(Project.find())
+    .exec();
 };
 
 // 프로젝트 생성
@@ -55,9 +73,7 @@ export const updateProject = async (id: string, updateData: any) => {
       runValidators: true
     }
   )
-    .populate('department', 'name')
-    .populate('members', 'name')
-    .populate('author', 'name');
+    .exec();
 
   if (!project) {
     throw new Error('프로젝트를 찾을 수 없습니다.');
@@ -74,14 +90,10 @@ export const deleteProject = async (id: string) => {
   return project;
 };
 
-// 프로젝트 상세 조회
 export const getProjectById = async (id: string) => {
-  const project = await Project.findById(id)
-    .populate('department', 'name')
-    .populate('members', 'name email')
-    .populate('author', 'name email')
-    .lean();
-  
+  const project = await populateProjectFields(Project.findById(id))
+    .exec();
+
   if (!project) {
     throw new Error('프로젝트를 찾을 수 없습니다.');
   }
@@ -94,11 +106,7 @@ class ProjectService {
     try {
       // departmentId와 userId 유효성 검사
       if (!Types.ObjectId.isValid(departmentId) || !Types.ObjectId.isValid(userId)) {
-        return {
-          success: false,
-          message: '유효하지 않은 ID입니다.',
-          status: 400
-        };
+        return createApiResponse.error('유효하지 않은 ID입니다.', 400);
       }
 
       const projects = await Project.find({
@@ -108,11 +116,7 @@ class ProjectService {
         .select('_id title')  // 프로젝트 ID와 제목만 선택
         .lean();  // 성능 최적화를 위해 일반 객체로 변환
 
-      return {
-        success: true,
-        message: '프로젝트 조회 성공',
-        data: { projects }
-      };
+      return createApiResponse.success('프로젝트 조회 성공', { projects });
     } catch (error) {
       console.error('Project lookup error:', error);
       throw new Error('프로젝트 조회 중 오류가 발생했습니다.');
