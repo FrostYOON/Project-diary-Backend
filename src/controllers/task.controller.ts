@@ -15,9 +15,6 @@ export const getTaskController = async (req: Request, res: Response, next: NextF
 // 업무 생성
 export const createTaskController: RequestHandler = async (req, res, next) => {
   try {
-    // 요청 데이터 로깅
-    console.log('Task creation request body:', req.body);
-    
     if (!req.user?._id) {
       res.status(401).json({
         success: false,
@@ -61,12 +58,6 @@ export const getTaskByIdController = async (
 // 업무 수정
 export const updateTaskController: RequestHandler = async (req, res, next) => {
   try {
-    console.log('=== Task Update Request ===');
-    console.log('Headers:', req.headers);
-    console.log('Params:', req.params);
-    console.log('Body:', JSON.stringify(req.body, null, 2));
-    console.log('========================');
-
     if (!req.user?._id) {
       res.status(401).json({
         success: false,

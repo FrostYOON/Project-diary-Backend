@@ -123,7 +123,7 @@ export const getMeController: RequestHandler = async (req, res, next) => {
     if (!req.user?._id) {
       res.status(401).json({
         success: false,
-        message: '로그인이 필요합니다.'
+        message: '로그인이 필요합니다. 토큰이 없거나 유효하지 않습니다.'
       });
       return;
     }
@@ -131,6 +131,7 @@ export const getMeController: RequestHandler = async (req, res, next) => {
     const result = await userService.getMyInfo(req.user._id.toString());
     res.json(result);
   } catch (error) {
+    console.error('Get Me error:', error);
     next(error);
   }
 };
