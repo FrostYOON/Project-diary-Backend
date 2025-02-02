@@ -24,13 +24,25 @@ router.get('/', getProjectListController);
 router.get('/:id', checkProjectExists, getProjectByIdController);
 
 // 프로젝트 생성
-router.post('/', checkProjectPermission, createProjectController);
+router.post('/', 
+  passport.authenticate('jwt', { session: false }),  // passport 인증 미들웨어 사용
+  checkProjectPermission,
+  createProjectController
+);
 
 // 프로젝트 수정
-router.put('/:id', checkProjectExists, checkProjectPermission, updateProjectController);
+router.put('/:id', 
+  passport.authenticate('jwt', { session: false }),
+  checkProjectPermission,
+  updateProjectController
+);
 
 // 프로젝트 삭제
-router.delete('/:id', checkProjectExists, checkProjectPermission, deleteProjectController);
+router.delete('/:id', 
+  passport.authenticate('jwt', { session: false }),
+  checkProjectPermission,
+  deleteProjectController
+);
 
 // 부서와 사용자별 프로젝트 조회
 router.get('/', getProjectsByDepartmentAndUserController);

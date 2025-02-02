@@ -25,7 +25,7 @@ const jwtOptions = {
 const googleConfig: StrategyOptionsWithRequest = {
   clientID: process.env.GOOGLE_CLIENT_ID || '',
   clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-  callbackURL: 'http://localhost:3001/api/v1/auth/login/google/callback',
+  callbackURL: process.env.GOOGLE_CALLBACK_URL || '',
   passReqToCallback: true,
 };
 

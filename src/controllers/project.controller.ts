@@ -1,21 +1,29 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { createProject, getProjectList, updateProject, deleteProject, getProjectById, projectService } from '../services/project.service';
-import { IUser } from '../types/user.types';
 import { Project } from '../models';
+import { IUser } from '../types/user.types';
+
+export interface ApiResponse {
+  success: boolean;
+  message: string;
+  status?: number;
+  data?: any;
+}
+
+// 공통 응답 처리 함수
+const sendResponse = (res: Response, status: number, success: boolean, message: string, data?: any) => {
+  res.status(status).json({
+    success,
+    message,
+    ...(data && { data })
+  });
+};
 
 // 프로젝트 목록 조회
-export const getProjectListController = async (
-  req: Request, 
-  res: Response, 
-  next: NextFunction
-) => {
+export const getProjectListController: RequestHandler = async (req, res, next) => {
   try {
     const projects = await getProjectList();
-    res.status(200).json({
-      success: true,
-      message: '프로젝트 목록이 조회되었습니다.',
-      data: projects
-    });
+    sendResponse(res, 200, true, '프로젝트 목록이 조회되었습니다.', { projects });
   } catch (error) {
     next(error);
   }
@@ -24,59 +32,27 @@ export const getProjectListController = async (
 // 프로젝트 상세 조회
 export const getProjectByIdController: RequestHandler = async (req, res, next) => {
   try {
-    const projectId = req.params.id;
-    const project = await Project.findById(projectId)
-      .populate('department', 'name')
-      .populate('members', 'name email')
-      .populate('author', 'name email');
-
-    if (!project) {
-      res.status(404).json({
-        success: false,
-        message: '프로젝트를 찾을 수 없습니다.'
-      });
-      return;
-    }
-
-    res.status(200).json({
-      success: true,
-      message: '프로젝트 상세 조회 성공',
-      data: { project }
-    });
+    const project = await getProjectById(req.params.id);
+    sendResponse(res, 200, true, '프로젝트 상세 조회 성공', { project });
   } catch (error) {
     next(error);
   }
 };
 
-interface AuthenticatedRequest extends Request {
-  user: IUser;
-}
-
 // 프로젝트 생성
-export const createProjectController: RequestHandler<{}, any, any, any, { user: IUser }> = async (
-  req,
-  res,
-  next
-) => {
+export const createProjectController: RequestHandler = async (req, res, next) => {
   try {
     if (!req.user) {
-      res.status(401).json({
-        success: false,
-        message: '인증이 필요합니다.'
-      });
-      return;
+      return sendResponse(res, 401, false, '인증이 필요합니다.');
     }
 
     const projectData = {
       ...req.body,
-      author: req.user._id
+      author: (req.user as IUser)._id
     };
+    
     const newProject = await createProject(projectData);
-    res.status(201).json({
-      success: true,
-      message: '프로젝트가 생성되었습니다.',
-      data: newProject
-    });
+    sendResponse(res, 201, true, '프로젝트가 생성되었습니다.', { project: newProject });
   } catch (error) {
     next(error);
   }
@@ -85,52 +61,35 @@ export const createProjectController: RequestHandler<{}, any, any, any, { user: 
 // 프로젝트 수정
 export const updateProjectController: RequestHandler = async (req, res, next) => {
   try {
-    const projectId = req.params.id;
-    const updateData = req.body;
-    const result = await updateProject(projectId, updateData);
-    
-    res.status(200).json({
-      success: true,
-      message: '프로젝트가 수정되었습니다.',
-      data: { project: result }
-    });
+    const updatedProject = await updateProject(req.params.id, req.body);
+    sendResponse(res, 200, true, '프로젝트가 수정되었습니다.', { project: updatedProject });
   } catch (error) {
     next(error);
   }
 };
 
 // 프로젝트 삭제
-export const deleteProjectController = async (req: Request, res: Response) => {
-    const projectId = req.params.id;
-    await deleteProject(projectId);
-    res.status(204).json({
-      success: true,
-      message: '프로젝트가 삭제되었습니다.'
-    });
+export const deleteProjectController: RequestHandler = async (req, res, next) => {
+  try {
+    await deleteProject(req.params.id);
+    sendResponse(res, 200, true, '프로젝트가 삭제되었습니다.');
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getProjectsByDepartmentAndUserController: RequestHandler = async (req, res, next) => {
   try {
     const { departmentId, userId } = req.query;
-
-    if (!departmentId || !userId) {
-      res.status(400).json({
-        success: false,
-        message: 'departmentId와 userId는 필수 파라미터입니다.'
-      });
-      return;
-    }
-
     const result = await projectService.getProjectsByDepartmentAndUser(
       departmentId as string,
       userId as string
-    );
+    ) as ApiResponse;
 
     if (result.status) {
       res.status(result.status).json(result);
       return;
     }
-
     res.json(result);
   } catch (error) {
     next(error);

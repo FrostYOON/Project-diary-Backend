@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { User, Department } from '../models';
 import { userService } from '../services/user.service';
 import mongoose from 'mongoose';
+import { IUser } from '../types/user.types';
 
 export const getUserListController = async (
   req: Request,
@@ -120,7 +121,7 @@ export const getUsersByDepartmentController: RequestHandler = async (req, res, n
 // 내 정보 조회 컨트롤러
 export const getMeController: RequestHandler = async (req, res, next) => {
   try {
-    if (!req.user?._id) {
+    if (!(req.user as IUser)?._id) {
       res.status(401).json({
         success: false,
         message: '로그인이 필요합니다. 토큰이 없거나 유효하지 않습니다.'
@@ -128,7 +129,7 @@ export const getMeController: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    const result = await userService.getMyInfo(req.user._id.toString());
+    const result = await userService.getMyInfo((req.user as IUser)._id.toString());
     res.json(result);
   } catch (error) {
     console.error('Get Me error:', error);

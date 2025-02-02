@@ -1,14 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { validationResult } from 'express-validator';
-import { Project } from '../models';
+import { Project, User } from '../models';
 import { IUser } from '../types/user.types';
-import { User } from '../models';
-
-declare global {
-  namespace Express {
-    interface User extends IUser {}
-  }
-}
 
 export const validateProject = (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
@@ -41,12 +34,12 @@ export const checkProjectPermission: RequestHandler = async (
   next
 ): Promise<void> => {
   try {
-    if (!req.user?._id) {
+    if (!req.user) {
       res.status(401).json({ message: '인증이 필요합니다.' });
       return;
     }
 
-    const user = await User.findById(req.user._id);
+    const user = await User.findById((req.user as IUser)._id);
     if (!user) {
       res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
       return;
