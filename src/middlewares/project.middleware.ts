@@ -1,14 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { validationResult } from 'express-validator';
 import { Project } from '../models';
-import { IUser } from '../types/user.types';
 import { User } from '../models';
-
-declare global {
-  namespace Express {
-    interface User extends IUser {}
-  }
-}
 
 export const validateProject = (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
