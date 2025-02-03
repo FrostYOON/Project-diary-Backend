@@ -35,8 +35,8 @@ export const loginController = async (
       return;
     }
 
-    const result = await authService.login(email, password);
-    res.status(200).json(result);
+    const result = await authService.login(email, password, res);
+    res.status(result.status || 200).json(result);
   } catch (error) {
     if (error instanceof AuthError) {
       res.status(401).json({
