@@ -1,54 +1,30 @@
 import express from 'express';
 import passport from 'passport';
-import { signUpController } from '../../../controllers/auth.controller';
+import { loginController, signUpController } from '../../../controllers/auth.controller';
 import { signUpValidator } from '../../../validators/auth.validator';
-import jwt from 'jsonwebtoken';
-import { IUser } from '../../../types/user.types';
 
 const router = express.Router();
 
-// 회원가입 - JWT 인증 제거
+// 회원가입
 router.post('/signup', signUpValidator, signUpController);
 
 // 일반 로그인
 router.post('/login', (req, res, next) => {
-  passport.authenticate('local', { session: false }, (
-    err: any, 
-    user: IUser | false, 
-    info: { message: string } | undefined
-  ) => {
+  passport.authenticate('local', { session: false }, async (err: any, user: any, info: any) => {
     if (err) {
       return next(err);
     }
     if (!user) {
       return res.status(401).json({ 
+        success: false,
         message: info?.message || '이메일 또는 비밀번호가 올바르지 않습니다.' 
       });
     }
 
     try {
-      // JWT 토큰 생성
-      const accessToken = jwt.sign(
-        { id: user._id },
-        process.env.JWT_SECRET || 'fallback-secret',
-        { expiresIn: '24h' }
-      );
-
-      // 쿠키에 토큰 설정
-      res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production'
-      });
-
-      // 응답에 토큰 포함
-      return res.json({
-        success: true,
-        user: {
-          id: user._id,
-          email: user.email
-        },
-        accessToken  // 토큰을 응답에 포함
-      });
+      // 원래 비밀번호는 유지하면서 인증된 사용자 정보로 컨트롤러 호출
+      req.user = user;
+      return loginController(req, res, next);
     } catch (error) {
       next(error);
     }

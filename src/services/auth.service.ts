@@ -5,6 +5,7 @@ import { User } from '../models';
 import { AuthError } from '../types/error';
 import { AuthResponse, ApiResponse, LoginResponse } from '../types/response.types';
 import { Department } from '../models';
+import { Response } from 'express';
 
 class AuthService {
   // 유틸리티 메서드들
@@ -186,35 +187,35 @@ class AuthService {
   }
   
   // 로그인
-  async login(email: string, password: string): Promise<ApiResponse<LoginResponse>> {
+  async login(email: string, password: string, res: Response): Promise<ApiResponse<LoginResponse>> {
     try {
       const user = await User.findOne({ email });
       
       if (!user) {
-        console.log('User not found with email:', email);
         throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
 
-      // 비밀번호 필드 확인
       if (!user.password) {
         console.error('User found but password is not set');
         throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
 
-      // 비밀번호 비교
-      try {
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        
-        if (!isPasswordValid) {
-          throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
-        }
-      } catch (bcryptError) {
-        console.error('Password comparison error:', bcryptError);
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
         throw new AuthError('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
 
       const accessToken = this.generateToken(user);
-      
+
+      // 쿠키에 토큰 설정
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 24 * 60 * 60 * 1000
+      });
+
       return {
         success: true,
         message: '로그인이 완료되었습니다.',
@@ -229,13 +230,7 @@ class AuthService {
       };
     } catch (error) {
       console.error('Login error:', error);
-      if (error instanceof AuthError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        console.error('Detailed error:', error.message);
-      }
-      throw new AuthError('로그인 처리 중 오류가 발생했습니다.');
+      throw error;
     }
   }
 
