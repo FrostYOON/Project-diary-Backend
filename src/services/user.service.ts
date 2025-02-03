@@ -61,11 +61,19 @@ class UserService {
   // 사용자 정보 수정
   async updateUser(id: string, data: Partial<IUserSignup>): Promise<ApiResponse> {
     try {
+      // email과 password 필드 제거
+      const { email, password, ...updateData } = data;
+
       const user = await User.findByIdAndUpdate(
-        id, 
-        data,
-        { new: true }
-      ).select('-password -socialId');
+        id,
+        updateData,
+        { 
+          new: true,
+          runValidators: true 
+        }
+      )
+      .select('-password -socialId')
+      .populate('department', 'name');
 
       if (!user) {
         return {
@@ -77,11 +85,24 @@ class UserService {
 
       return {
         success: true,
-        message: '사용자 정보가 수정되었습니다.',
-        data: { user }
+        message: '회원정보가 수정되었습니다.',
+        data: { 
+          user: {
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            birth: user.birth,
+            department: user.department,
+            role: user.role,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+          }
+        }
       };
     } catch (error) {
-      throw new Error('사용자 수정 중 오류가 발생했습니다.');
+      console.error('User update error:', error);
+      throw new Error('회원정보 수정 중 오류가 발생했습니다.');
     }
   }
 
