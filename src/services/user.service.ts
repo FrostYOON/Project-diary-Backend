@@ -1,6 +1,7 @@
 import { User } from '../models';
 import { ApiResponse } from '../types/response.types';
 import { IUserSignup } from '../types/user.types';
+import bcrypt from 'bcrypt';
 
 class UserService {
   // 사용자 생성
@@ -61,12 +62,18 @@ class UserService {
   // 사용자 정보 수정
   async updateUser(id: string, data: Partial<IUserSignup>): Promise<ApiResponse> {
     try {
+      // email과 password 필드 제거
+      const { email, password, ...updateData } = data;
       const user = await User.findByIdAndUpdate(
-        id, 
-        data,
-        { new: true }
-      ).select('-password -socialId');
-
+        id,
+        updateData,
+        { 
+          new: true,
+          runValidators: true 
+        }
+      )
+      .select('-password -socialId')
+      .populate('department', 'name');
       if (!user) {
         return {
           success: false,
@@ -77,11 +84,24 @@ class UserService {
 
       return {
         success: true,
-        message: '사용자 정보가 수정되었습니다.',
-        data: { user }
+        message: '회원정보가 수정되었습니다.',
+        data: { 
+          user: {
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            birth: user.birth,
+            department: user.department,
+            role: user.role,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+          }
+        }
       };
     } catch (error) {
-      throw new Error('사용자 수정 중 오류가 발생했습니다.');
+      console.error('User update error:', error);
+      throw new Error('회원정보 수정 중 오류가 발생했습니다.');
     }
   }
 
@@ -143,6 +163,50 @@ class UserService {
     } catch (error) {
       console.error('User info lookup error:', error);
       throw new Error('사용자 정보 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 비밀번호 변경
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<ApiResponse> {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return {
+          success: false,
+          message: '사용자를 찾을 수 없습니다.',
+          status: 404
+        };
+      }
+
+      if (!user.password) {
+        return {
+          success: false,
+          message: '비밀번호가 설정되어 있지 않습니다.',
+          status: 400
+        };
+      }
+
+      // 현재 비밀번호 검증
+      const isPasswordCorrect = await bcrypt.compare(currentPassword, user.password);
+      if (!isPasswordCorrect) {
+        return {
+          success: false,
+          message: '현재 비밀번호가 일치하지 않습니다.',
+          status: 400
+        };
+      }
+
+      // 새 비밀번호 해시화
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+
+      return {
+        success: true,
+        message: '비밀번호가 변경되었습니다.'
+      };
+    } catch (error) {
+      throw new Error('비밀번호 변경 중 오류가 발생했습니다.');
     }
   }
 }
