@@ -7,16 +7,25 @@ import {
   updateUserController,
   deleteUserController,
   getMeController,
-  getUsersByDepartmentController
+  getUsersByDepartmentController,
+  changePasswordController
 } from '../../../controllers/user.controller';
+import { changePasswordValidator, updateUserValidator } from '../../../validators/user.validator';
 
 const router = Router();
 const authenticateJWT = passport.authenticate('jwt', { session: false });
 
-// 내 부서 정보 조회 (가장 구체적인 경로)
+
+// 본인 정보 조회
 router.get('/me', authenticateJWT, getMeController);
 
-// 부서별 사용자 조회 (두 번째로 구체적인 경로)
+// 본인 회원정보 수정
+router.put("/me", authenticateJWT, updateUserValidator, updateUserController);
+
+// 본인 비밀번호 변경
+router.put("/me/password", authenticateJWT, changePasswordValidator, changePasswordController);
+
+// 부서별 사용자 조회
 router.get('/department/:departmentId', authenticateJWT, getUsersByDepartmentController);
 
 // 일반적인 CRUD 라우트
