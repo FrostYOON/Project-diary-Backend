@@ -1,21 +1,28 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { createProject, getProjectList, updateProject, deleteProject, getProjectById, projectService } from '../services/project.service';
+import { createProject, updateProject, deleteProject, projectService } from '../services/project.service';
 import { IUser } from '../types/user.types';
 import { Project } from '../models';
 
 // 프로젝트 목록 조회
-export const getProjectListController = async (
-  req: Request, 
-  res: Response, 
-  next: NextFunction
-) => {
+export const getProjectListController: RequestHandler = async (req, res, next): Promise<void> => {
   try {
-    const projects = await getProjectList();
-    res.status(200).json({
-      success: true,
-      message: '프로젝트 목록이 조회되었습니다.',
-      data: projects
-    });
+    if (!req.user?._id || !req.user?.role) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
+      return;
+    }
+
+    // role 확인을 위한 로깅 추가
+    console.log('User Role:', req.user.role);
+    console.log('User ID:', req.user._id);
+
+    const result = await projectService.getProjectList(
+      req.user._id.toString(),
+      req.user.role
+    );
+    res.json(result);
   } catch (error) {
     next(error);
   }

@@ -36,13 +36,13 @@ class TaskService {
   }
 
   // 전체 업무 조회
-  async getAllTasks(): Promise<ApiResponse> {
+  async getAllTasks(userId: string): Promise<ApiResponse> {
     try {
-      const tasks = await Task.find()
-        .populate('project', 'title')  // project의 title만
+      const tasks = await Task.find({ author: userId })  // 작성자 기준으로 필터링
+        .populate('project', 'title')
         .populate('author', 'name')
-        .sort({ endDate: -1 });   // author의 name만
-      
+        .sort({ endDate: -1 });
+
       return {
         success: true,
         message: '업무 목록 조회 성공',
