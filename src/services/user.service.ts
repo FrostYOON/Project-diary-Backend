@@ -62,7 +62,6 @@ class UserService {
   // 사용자 정보 수정
   async updateUser(id: string, data: Partial<IUserSignup>): Promise<ApiResponse> {
     try {
-      // email과 password 필드 제거
       const { email, password, ...updateData } = data;
       const user = await User.findByIdAndUpdate(
         id,
@@ -74,6 +73,7 @@ class UserService {
       )
       .select('-password -socialId')
       .populate('department', 'name');
+
       if (!user) {
         return {
           success: false,
@@ -94,6 +94,7 @@ class UserService {
             birth: user.birth,
             department: user.department,
             role: user.role,
+            registerType: user.registerType,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
           }
@@ -155,6 +156,7 @@ class UserService {
             birth: user.birth,
             department: user.department,
             role: user.role,
+            registerType: user.registerType,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
           }
@@ -175,6 +177,15 @@ class UserService {
           success: false,
           message: '사용자를 찾을 수 없습니다.',
           status: 404
+        };
+      }
+
+      // 소셜 로그인 사용자 체크
+      if (user.registerType === 'google') {
+        return {
+          success: false,
+          message: '소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다.',
+          status: 400
         };
       }
 
