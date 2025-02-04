@@ -2,6 +2,8 @@ import { User } from '../models';
 import { ApiResponse } from '../types/response.types';
 import { IUserSignup } from '../types/user.types';
 import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
+import { Department } from '../models';
 
 class UserService {
   // 사용자 생성
@@ -56,6 +58,16 @@ class UserService {
       };
     } catch (error) {
       throw new Error('사용자 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 사용자 권한 조회
+  async getUserRole(userId: string): Promise<ApiResponse> {
+    try {
+      const user = await User.findById(userId);
+      return { success: true, message: '사용자 권한 조회 성공', data: { role: user?.role } };
+    } catch (error) {
+      throw new Error('사용자 권한 조회 중 오류가 발생했습니다.');
     }
   }
 
@@ -218,6 +230,49 @@ class UserService {
       };
     } catch (error) {
       throw new Error('비밀번호 변경 중 오류가 발생했습니다.');
+    }
+  }
+
+  async getUsersByDepartment(departmentId: string): Promise<ApiResponse> {
+    try {
+      let query;
+      if (departmentId === 'other') {
+        const otherDepartment = await Department.findOne({ name: 'other' });
+        if (!otherDepartment) {
+          return {
+            success: false,
+            message: '기본 부서를 찾을 수 없습니다.',
+            status: 404
+          };
+        }
+        query = { department: otherDepartment._id };
+      } else {
+        if (!mongoose.Types.ObjectId.isValid(departmentId)) {
+          return {
+            success: false,
+            message: '유효하지 않은 부서 ID입니다.',
+            status: 400
+          };
+        }
+        query = { department: departmentId };
+      }
+
+      const users = await User.find(query)
+        .select('-password -socialId')
+        .populate('department', 'name');
+
+      return {
+        success: true,
+        message: '부서별 사용자 목록 조회 성공',
+        data: { users }
+      };
+    } catch (error) {
+      console.error('부서별 사용자 조회 에러:', error);
+      return {
+        success: false,
+        message: '부서별 사용자 조회 중 오류가 발생했습니다.',
+        status: 500
+      };
     }
   }
 }

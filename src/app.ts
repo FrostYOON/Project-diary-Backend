@@ -13,6 +13,10 @@ import { errorHandler } from './middlewares/error.middleware';
 import routes from './routes/api/v1/index';
 import './config/passport';  // Passport 설정 import
 import { customLogger } from './middlewares/logger.middleware';
+import userRouter from './routes/api/v1/user.routes';
+import departmentRouter from './routes/api/v1/department.routes';
+import projectRouter from './routes/api/v1/project.routes';
+import authRouter from './routes/api/v1/auth.routes';
 
 dotenv.config();
 
@@ -74,9 +78,14 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+const authenticateJWT = passport.authenticate('jwt', { session: false });
 
 // 라우트 설정
 app.use('/api/v1', routes);
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/users', authenticateJWT, userRouter);
+app.use('/api/v1/departments', departmentRouter);
+app.use('/api/v1/projects', projectRouter);
 
 // 에러 핸들링
 app.use(errorHandler);

@@ -2,15 +2,6 @@ import { Project, Department } from "../models";
 import mongoose, { Types } from 'mongoose';
 import notificationService from './notification.service';
 
-
-// 프로젝트 목록 조회
-export const getProjectList = async () => {
-  return Project.find()
-    .populate('department', 'name')
-    .populate('members', 'name')
-    .populate('author', 'name');
-};
-
 // 프로젝트 생성
 export const createProject = async (projectData: any) => {
   try {
@@ -105,7 +96,7 @@ export const getProjectById = async (id: string) => {
   return project;
 };
 
-class ProjectService {
+export class ProjectService {
   // 부서와 사용자 ID로 프로젝트 필터링
   async getProjectsByDepartmentAndUser(departmentId: string, userId: string) {
     try {
@@ -133,6 +124,68 @@ class ProjectService {
     } catch (error) {
       console.error('Project lookup error:', error);
       throw new Error('프로젝트 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  async getProjectList(userId: string, userRole: string) {
+    try {
+      let query = {};
+      
+      if (userRole === 'admin') {
+        query = {};
+      } else if (userRole === 'manager') {
+        query = { author: userId };
+      } else if (userRole === 'user') {
+        query = { members: userId };
+      }
+
+      console.log('Query:', query);
+      console.log('UserRole:', userRole);
+      console.log('UserId:', userId);
+
+      const projects = await Project.find(query)
+        .populate('department', 'name')
+        .populate('members', 'name email')
+        .populate('author', 'name email')
+        .sort({ createdAt: -1 });
+
+      console.log('Found Projects:', projects.length);
+
+      return {
+        success: true,
+        message: '프로젝트 목록 조회 성공',
+        data: projects
+      };
+    } catch (error) {
+      console.error('Project list error:', error);
+      throw new Error('프로젝트 목록 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 프로젝트 상세 조회 메서드 추가
+  async getProjectById(projectId: string) {
+    try {
+      const project = await Project.findById(projectId)
+        .populate('department', 'name')
+        .populate('members', 'name email')  // members 필드 populate
+        .populate('author', 'name email');
+
+      if (!project) {
+        return {
+          success: false,
+          message: '프로젝트를 찾을 수 없습니다.',
+          status: 404
+        };
+      }
+
+      return {
+        success: true,
+        message: '프로젝트 상세 조회 성공',
+        data: project
+      };
+    } catch (error) {
+      console.error('Project detail error:', error);
+      throw new Error('프로젝트 상세 조회 중 오류가 발생했습니다.');
     }
   }
 }

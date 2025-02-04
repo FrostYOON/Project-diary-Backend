@@ -3,9 +3,16 @@ import { taskService } from "../services/task.service";
 import { ITask } from "../types/task.types";
 
 // 전체 업무 조회
-export const getTaskController = async (req: Request, res: Response, next: NextFunction) => {
+export const getTaskController: RequestHandler = async (req, res, next): Promise<void> => {
   try {
-    const result = await taskService.getAllTasks();
+    if (!req.user?._id) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
+      return;
+    }
+    const result = await taskService.getAllTasks(req.user._id.toString());
     res.status(200).json(result);
   } catch (error) {
     next(error);
