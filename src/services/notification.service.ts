@@ -116,9 +116,31 @@ class NotificationService {
 
   // 사용자의 알림 목록 조회
   async getUserNotifications(userId: string) {
-    return Notification.find({ recipients: userId })
-      .populate('project', 'title')
-      .sort({ createdAt: -1 });
+    try {
+      const notifications = await Notification.find({
+        $or: [
+          { recipients: userId },
+          { readBy: userId }
+        ]
+      })
+        .populate('project', 'title')
+        .sort({ createdAt: -1 });
+
+      // 사용자별 알림 상태 처리
+      return notifications.map(notification => {
+        const notificationObj = notification.toObject();
+        return {
+          ...notificationObj,
+          isRead: notification.readBy.includes(new Types.ObjectId(userId)),
+          // 현재 사용자 기준으로 recipients, readBy 필터링
+          recipients: notification.recipients.filter(id => id.toString() === userId),
+          readBy: notification.readBy.filter(id => id.toString() === userId)
+        };
+      });
+    } catch (error) {
+      console.error('알림 목록 조회 중 오류:', error);
+      throw error;
+    }
   }
 
   // 알림 읽음 처리
@@ -131,13 +153,20 @@ class NotificationService {
           'readBy': { $ne: userId } // 아직 읽지 않은 경우에만
         },
         { 
-          $addToSet: { readBy: userId } // readBy 배열에 사용자 추가
+          $addToSet: { readBy: userId }, // readBy 배열에 사용자 추가
+          $pull: { recipients: userId }   // recipients 배열에서 사용자 제거
         },
         { new: true }
       );
 
       if (!notification) {
         throw new Error('알림을 찾을 수 없거나 이미 읽은 알림입니다.');
+      }
+
+      // recipients 배열이 비어있으면 알림 완전 삭제
+      if (notification.recipients.length === 0) {
+        await Notification.findByIdAndDelete(notificationId);
+        return null;
       }
 
       return notification;
@@ -152,7 +181,7 @@ class NotificationService {
     try {
       const notification = await Notification.findOneAndUpdate(
         { _id: notificationId },
-        { $pull: { recipients: userId } },
+        { $pull: { readBy: userId } },
         { new: true }
       );
 
@@ -161,7 +190,7 @@ class NotificationService {
       }
 
       // recipients 배열이 비어있으면 알림 완전 삭제
-      if (notification.recipients.length === 0) {
+      if (notification.recipients.length === 0 && notification.readBy.length === 0) {
         await Notification.findByIdAndDelete(notificationId);
         return null;
       }
