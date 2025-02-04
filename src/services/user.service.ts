@@ -61,6 +61,16 @@ class UserService {
     }
   }
 
+  // 사용자 권한 조회
+  async getUserRole(userId: string): Promise<ApiResponse> {
+    try {
+      const user = await User.findById(userId);
+      return { success: true, message: '사용자 권한 조회 성공', data: { role: user?.role } };
+    } catch (error) {
+      throw new Error('사용자 권한 조회 중 오류가 발생했습니다.');
+    }
+  }
+
   // 사용자 정보 수정
   async updateUser(id: string, data: Partial<IUserSignup>): Promise<ApiResponse> {
     try {

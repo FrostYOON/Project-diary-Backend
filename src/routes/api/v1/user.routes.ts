@@ -8,7 +8,8 @@ import {
   deleteUserController,
   getMeController,
   getUsersByDepartmentController,
-  changePasswordController
+  changePasswordController,
+  getUserRoleController
 } from '../../../controllers/user.controller';
 import { changePasswordValidator, updateUserValidator } from '../../../validators/user.validator';
 
@@ -27,6 +28,9 @@ router.put("/me/password", authenticateJWT, changePasswordValidator, changePassw
 
 // 부서별 사용자 조회
 router.get('/department/:departmentId', authenticateJWT, getUsersByDepartmentController);
+
+// 사용자 권한 조회
+router.get('/role', authenticateJWT, getUserRoleController);
 
 // 일반적인 CRUD 라우트
 router.post('/', authenticateJWT, createUserController);

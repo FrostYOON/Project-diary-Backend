@@ -3,6 +3,7 @@ import { User, Department } from '../models';
 import { userService } from '../services/user.service';
 import mongoose from 'mongoose';
 
+
 export const getUserListController = async (
   req: Request,
   res: Response,
@@ -45,6 +46,22 @@ export const getUserByIdController: RequestHandler = async (req, res, next) => {
       res.status(result.status).json(result);
       return;
     }
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserRoleController: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user?._id) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
+      return;
+    }
+    const result = await userService.getUserRole(req.user._id.toString());
     res.json(result);
   } catch (error) {
     next(error);
