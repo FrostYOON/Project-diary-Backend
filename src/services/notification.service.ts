@@ -146,21 +146,29 @@ class NotificationService {
   // 알림 읽음 처리
   async markAsRead(notificationId: string, userId: string) {
     try {
+      // 먼저 알림이 존재하는지 확인
+      const existingNotification = await Notification.findById(notificationId);
+      if (!existingNotification) {
+        throw new Error('알림을 찾을 수 없습니다.');
+      }
+
+      // 이미 읽은 알림인지 확인
+      if (existingNotification.readBy.includes(new Types.ObjectId(userId))) {
+        return existingNotification;
+      }
+
+      // 알림 업데이트
       const notification = await Notification.findOneAndUpdate(
+        { _id: notificationId },
         { 
-          _id: notificationId,
-          recipients: userId,
-          'readBy': { $ne: userId } // 아직 읽지 않은 경우에만
-        },
-        { 
-          $addToSet: { readBy: userId }, // readBy 배열에 사용자 추가
-          $pull: { recipients: userId }   // recipients 배열에서 사용자 제거
+          $addToSet: { readBy: userId },
+          $pull: { recipients: userId }
         },
         { new: true }
       );
 
       if (!notification) {
-        throw new Error('알림을 찾을 수 없거나 이미 읽은 알림입니다.');
+        throw new Error('알림을 찾을 수 없습니다.');
       }
 
       // recipients 배열이 비어있으면 알림 완전 삭제
