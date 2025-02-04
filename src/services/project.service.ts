@@ -155,33 +155,6 @@ export class ProjectService {
       throw new Error('프로젝트 목록 조회 중 오류가 발생했습니다.');
     }
   }
-
-  // 프로젝트 상세 조회 메서드 추가
-  async getProjectById(projectId: string) {
-    try {
-      const project = await Project.findById(projectId)
-        .populate('department', 'name')
-        .populate('members', 'name email')  // members 필드 populate
-        .populate('author', 'name email');
-
-      if (!project) {
-        return {
-          success: false,
-          message: '프로젝트를 찾을 수 없습니다.',
-          status: 404
-        };
-      }
-
-      return {
-        success: true,
-        message: '프로젝트 상세 조회 성공',
-        data: project
-      };
-    } catch (error) {
-      console.error('Project detail error:', error);
-      throw new Error('프로젝트 상세 조회 중 오류가 발생했습니다.');
-    }
-  }
 }
 
 export const projectService = new ProjectService();
