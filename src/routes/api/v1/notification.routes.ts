@@ -1,14 +1,10 @@
 import { Router } from 'express';
-import passport from 'passport';
 import notificationService from '../../../services/notification.service';
 
 const router = Router();
 
-// JWT 인증 미들웨어
-const authenticateJwt = passport.authenticate('jwt', { session: false });
-
 // 사용자의 알림 목록 조회
-router.get('/', authenticateJwt, async (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const userId = req.user?._id.toString();
     if (!userId) {
@@ -29,7 +25,7 @@ router.get('/', authenticateJwt, async (req, res, next) => {
 });
 
 // 알림 읽음 처리
-router.patch('/:id/read', authenticateJwt, async (req, res, next) => {
+router.patch('/:id/read', async (req, res, next) => {
   try {
     const userId = req.user?._id.toString();
     if (!userId) {
@@ -50,7 +46,7 @@ router.patch('/:id/read', authenticateJwt, async (req, res, next) => {
 });
 
 // 알림 삭제
-router.delete('/:id', authenticateJwt, async (req, res, next) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     const userId = req.user?._id.toString();
     if (!userId) {
