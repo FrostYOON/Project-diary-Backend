@@ -189,7 +189,7 @@ class NotificationService {
     try {
       const notification = await Notification.findOneAndUpdate(
         { _id: notificationId },
-        { $pull: { readBy: userId } },
+        { $pull: { readBy: userId, recipients: userId } },
         { new: true }
       );
 

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { validationResult } from 'express-validator';
 import { Project } from '../models';
 import { User } from '../models';
+import { IUser } from '../types/user.types';
 
 export const validateProject = (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
@@ -29,30 +30,33 @@ export const checkProjectExists = async (req: Request, res: Response, next: Next
 
 // 프로젝트 생성, 수정, 삭제 시 manager, admin 권한 확인
 export const checkProjectPermission: RequestHandler = async (
-  req,
-  res,
-  next
+  req: Request,
+  res: Response,
+  next: NextFunction
 ): Promise<void> => {
   try {
-    if (!req.user?._id) {
-      res.status(401).json({ message: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
       return;
     }
 
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
-      return;
-    }
+    console.log('User Role:', req.user.role);
+    console.log('Request Method:', req.method);
 
-    if (user.role !== 'admin' && user.role !== 'manager') {
-      res.status(403).json({ message: '프로젝트 생성 권한이 없습니다.' });
+    if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+      res.status(403).json({
+        success: false,
+        message: '프로젝트 생성 권한이 없습니다.'
+      });
       return;
     }
 
     next();
   } catch (error) {
-    res.status(500).json({ message: '권한 확인 중 오류가 발생했습니다.' });
+    next(error);
   }
 };
 
