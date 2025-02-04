@@ -1,5 +1,6 @@
 import { Project, Department } from "../models";
 import mongoose, { Types } from 'mongoose';
+import notificationService from './notification.service';
 
 
 // 프로젝트 목록 조회
@@ -35,6 +36,10 @@ export const createProject = async (projectData: any) => {
     }
 
     const project = await Project.create(projectData);
+    
+    // 알림 생성
+    await notificationService.createProjectNotification(project);
+    
     return project;
   } catch (error) {
     console.error('프로젝트 생성 에러:', error);
@@ -67,11 +72,23 @@ export const updateProject = async (id: string, updateData: any) => {
 
 // 프로젝트 삭제
 export const deleteProject = async (id: string) => {
-  const project = await Project.findByIdAndDelete(id);
-  if (!project) {
-    throw new Error('프로젝트를 찾을 수 없습니다.');
+  try {
+    const project = await Project.findById(id);
+    if (!project) {
+      throw new Error('프로젝트를 찾을 수 없습니다.');
+    }
+
+    // 프로젝트 삭제 전에 알림 생성
+    await notificationService.createProjectCancelNotification(project);
+
+    // 프로젝트 삭제
+    await Project.findByIdAndDelete(id);
+    
+    return true;
+  } catch (error) {
+    console.error('프로젝트 삭제 에러:', error);
+    throw error;
   }
-  return project;
 };
 
 // 프로젝트 상세 조회
