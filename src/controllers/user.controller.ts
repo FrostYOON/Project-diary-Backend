@@ -135,3 +135,23 @@ export const getMeController: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+
+export const changePasswordController: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
+      return;
+    }
+
+    const result = await userService.changePassword(
+      req.user._id.toString(), 
+      req.body.currentPassword, 
+      req.body.newPassword);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}; 

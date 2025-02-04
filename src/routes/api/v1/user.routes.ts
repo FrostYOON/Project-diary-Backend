@@ -7,9 +7,10 @@ import {
   updateUserController,
   deleteUserController,
   getMeController,
-  getUsersByDepartmentController
+  getUsersByDepartmentController,
+  changePasswordController
 } from '../../../controllers/user.controller';
-import { updateUserValidator } from '../../../validators/user.validator';
+import { changePasswordValidator, updateUserValidator } from '../../../validators/user.validator';
 
 const router = Router();
 const authenticateJWT = passport.authenticate('jwt', { session: false });
@@ -20,6 +21,9 @@ router.get('/me', authenticateJWT, getMeController);
 
 // 본인 회원정보 수정
 router.put("/me", authenticateJWT, updateUserValidator, updateUserController);
+
+// 본인 비밀번호 변경
+router.put("/me/password", authenticateJWT, changePasswordValidator, changePasswordController);
 
 // 부서별 사용자 조회
 router.get('/department/:departmentId', authenticateJWT, getUsersByDepartmentController);
