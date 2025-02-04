@@ -43,9 +43,6 @@ export const checkProjectPermission: RequestHandler = async (
       return;
     }
 
-    console.log('User Role:', req.user.role);
-    console.log('Request Method:', req.method);
-
     if (req.user.role !== 'admin' && req.user.role !== 'manager') {
       res.status(403).json({
         success: false,
