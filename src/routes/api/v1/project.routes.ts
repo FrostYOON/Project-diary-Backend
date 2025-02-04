@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import passport from 'passport';
 import { 
   getProjectListController, 
   getProjectByIdController,
@@ -11,11 +10,6 @@ import {
 import { checkProjectExists, checkProjectPermission } from '../../../middlewares/project.middleware';
 
 const router = Router();
-
-const authenticateJWT = passport.authenticate('jwt', { session: false });
-
-// 모든 라우트에 인증 미들웨어 적용
-router.use(authenticateJWT);
 
 // 프로젝트 목록 조회 - checkProjectExists 제거
 router.get('/', getProjectListController);

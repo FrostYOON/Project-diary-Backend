@@ -81,11 +81,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const authenticateJWT = passport.authenticate('jwt', { session: false });
 
 // 라우트 설정
+app.use(authenticateJWT);
 app.use('/api/v1', routes);
-app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/users', authenticateJWT, userRouter);
-app.use('/api/v1/departments', departmentRouter);
-app.use('/api/v1/projects', projectRouter);
 
 // 에러 핸들링
 app.use(errorHandler);
