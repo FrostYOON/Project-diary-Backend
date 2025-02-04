@@ -14,10 +14,6 @@ export const getProjectListController: RequestHandler = async (req, res, next): 
       return;
     }
 
-    // role 확인을 위한 로깅 추가
-    console.log('User Role:', req.user.role);
-    console.log('User ID:', req.user._id);
-
     const result = await projectService.getProjectList(
       req.user._id.toString(),
       req.user.role

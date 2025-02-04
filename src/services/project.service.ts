@@ -139,17 +139,11 @@ export class ProjectService {
         query = { members: userId };
       }
 
-      console.log('Query:', query);
-      console.log('UserRole:', userRole);
-      console.log('UserId:', userId);
-
       const projects = await Project.find(query)
         .populate('department', 'name')
         .populate('members', 'name email')
         .populate('author', 'name email')
         .sort({ createdAt: -1 });
-
-      console.log('Found Projects:', projects.length);
 
       return {
         success: true,
