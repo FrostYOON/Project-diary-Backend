@@ -1,6 +1,6 @@
 import { Document, Types } from "mongoose";
 
-export const AUTH_TYPES = ['normal', 'google', 'kakao'];
+export const AUTH_TYPES = ['normal', 'google', 'naver', 'kakao'];
 export const USER_ROLES = ['user', 'manager', 'admin'];
 
 export type AuthType = typeof AUTH_TYPES[number];
