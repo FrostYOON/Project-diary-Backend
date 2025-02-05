@@ -132,7 +132,8 @@ class AuthService {
       const profile = {
         id: payload.sub,
         emails: [{ value: payload.email || '' }],
-        displayName: payload.name || payload.email?.split('@')[0] || ''
+        displayName: payload.name || payload.email?.split('@')[0] || '',
+        photos: [{ value: payload.picture || '' }]
       };
 
       return await googleAuthService.handleGoogleAuth(profile);
