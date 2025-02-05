@@ -21,15 +21,6 @@ export const getUserListController = async (
   }
 };
 
-export const createUserController: RequestHandler = async (req, res, next) => {
-  try {
-    const result = await userService.createUser(req.body);
-    res.status(201).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const getAllUsersController: RequestHandler = async (req, res, next) => {
   try {
     const result = await userService.getAllUsers();
