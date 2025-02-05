@@ -64,6 +64,7 @@ passport.use(
   new GoogleStrategy(
     googleConfig,
     async (req: Request, accessToken: string, refreshToken: string, profile, done) => {
+      console.log(profile);
       try {
         const result = await googleAuthService.handleGoogleAuth(profile as GoogleProfile);
         if (!result.data || !result.data.user) {
