@@ -155,6 +155,7 @@ class UserService {
             department: user.department,
             role: user.role,
             registerType: user.registerType,
+            profileImage: user.profileImage,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
           }

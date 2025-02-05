@@ -32,5 +32,6 @@ export interface LoginResponse {
     name: string;
     role: string;
     department: Types.ObjectId;
+    profileImage?: string;
   };
 }

@@ -19,16 +19,6 @@ export const loginValidation = [
     .withMessage("비밀번호는 최소 8자 이상이어야 합니다.")
 ];
 
-export const googleLoginValidation = [
-  body("googleToken")
-    .notEmpty()
-    .withMessage("구글 토큰이 필요합니다."),
-  body("email")
-    .isEmail()
-    .withMessage("유효하지 않은 이메일 주소입니다.")
-    .normalizeEmail()
-];
-
 const phoneBirthCheck = () => {
   return [
     body('phone')

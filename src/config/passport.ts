@@ -6,14 +6,15 @@ import {
   StrategyOptionsWithRequest,
 } from "passport-google-oauth20";
 import { Strategy as NaverStrategy, StrategyOption } from 'passport-naver';
+import { Strategy as KakaoStrategy } from 'passport-kakao';
 import { User } from "../models";
 import dotenv from "dotenv";
 import { Request } from "express";
 import { IUser } from "../types/user.types";
 import { googleAuthService } from "../services/google-auth.service";
-import { GoogleProfile } from "../types/auth.types";
 import { naverAuthService } from "../services/naver-auth.service";
-import { NaverProfile } from "../types/auth.types";
+import { kakaoAuthService } from "../services/kakao-auth.service";
+import { GoogleProfile, KakaoProfile, NaverProfile } from "../types/auth.types";
 import bcrypt from "bcrypt";
 dotenv.config();
 
@@ -29,6 +30,34 @@ const googleConfig: StrategyOptionsWithRequest = {
   callbackURL: "http://localhost:3001/api/v1/auth/login/google/callback",
   passReqToCallback: true,
 };
+
+// Kakao OAuth 설정
+const kakaoConfig = {
+  clientID: process.env.KAKAO_CLIENT_ID || '',
+  callbackURL: 'http://localhost:3001/api/v1/auth/login/kakao/callback'
+};
+
+// Kakao 전략 설정
+passport.use(
+  new KakaoStrategy(kakaoConfig, async (accessToken, refreshToken, profile, done) => {
+    try {
+      const result = await kakaoAuthService.handleKakaoAuth(profile as KakaoProfile);
+      if (!result.data || !result.data.user) {
+        return done(new Error("사용자 정보를 가져올 수 없습니다."), false);
+      }
+      
+      const userWithToken = {
+        ...result.data.user,
+        accessToken: result.data.accessToken
+      };
+      
+      return done(null, userWithToken);
+    } catch (error) {
+      console.error('Kakao strategy error:', error);
+      return done(error, false);
+    }
+  })
+);
 
 // Google 전략 설정
 passport.use(

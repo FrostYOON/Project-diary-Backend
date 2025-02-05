@@ -95,3 +95,27 @@ export const naverAuthMiddleware = (
     next(new AuthError('네이버 인증 처리 중 오류가 발생했습니다.'));
   }
 };
+    
+// 카카오 인증 미들웨어
+export const kakaoAuthMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const state = req.query.redirect_uri
+      ? Buffer.from(req.query.redirect_uri as string).toString("base64")
+      : Buffer.from(process.env.CLIENT_URL || "http://localhost:5173").toString(
+          "base64"
+        );
+
+    passport.authenticate("kakao", {
+      scope: ['profile_nickname', 'profile_image', 'account_email'],
+      state,
+      prompt: "select_account",
+    })(req, res, next);
+  } catch (error) {
+    console.error("Kakao auth error:", error);
+    return next(new AuthError("카카오 인증 처리 중 오류가 발생했습니다."));
+  }
+};
