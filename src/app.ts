@@ -16,6 +16,14 @@ dotenv.config();
 
 const app = express();
 
+// 미들웨어 설정
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+// app.use(morgan('dev'));
+app.use(customLogger);
+app.use(passport.initialize());  // Passport 초기화
+
 // 보안 미들웨어
 app.use(helmet());
 app.use(cors({
@@ -23,8 +31,11 @@ app.use(cors({
     ? process.env.CLIENT_URL 
     : 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use('/api/v1', routes);
 
 // 캐시 비활성화 미들웨어 추가
 app.use((req, res, next) => {
@@ -40,14 +51,6 @@ const limiter = rateLimit({
   max: 100 // IP당 최대 요청 수
 });
 app.use('/api', limiter);
-
-// 미들웨어 설정
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-// app.use(morgan('dev'));
-app.use(customLogger);
-app.use(passport.initialize());  // Passport 초기화
 
 // 스웨거 설정
 const swaggerOptions = {
@@ -71,12 +74,6 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-const authenticateJWT = passport.authenticate('jwt', { session: false });
-
-// 라우트 설정
-app.use(authenticateJWT);
-app.use('/api/v1', routes);
 
 // 에러 핸들링
 app.use(errorHandler);
