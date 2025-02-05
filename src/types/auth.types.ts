@@ -31,6 +31,12 @@ export interface NaverProfile {
   id: string;
   emails: Array<{ value: string }>;
   displayName: string;
+  profile_image: string;
+  _json: {
+    email: string;
+    nickname: string;
+    profile_image: string;
+  }
 }
 
 // 카카오 프로필 타입

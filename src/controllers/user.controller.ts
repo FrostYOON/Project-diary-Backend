@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { User, Department } from '../models';
 import { userService } from '../services/user.service';
 import mongoose from 'mongoose';
+import { tokenService } from '../services/token.service';
 
 
 export const getUserListController = async (
@@ -74,13 +75,27 @@ export const updateUserController: RequestHandler = async (req, res, next) => {
 
 export const deleteUserController: RequestHandler = async (req, res, next) => {
   try {
-    const result = await userService.deleteUser(req.params.id);
-    if (result.status) {
-      res.status(result.status).json(result);
+    if (!req.user?._id) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
       return;
     }
-    res.json(result);
+
+    const result = await userService.deleteUser(req.user._id.toString());
+    
+    // 쿠키 삭제
+    tokenService.clearCookie(res);
+    
+    res.json({
+      ...result,
+      data: {
+        shouldClearLocalStorage: true  // 프론트엔드에서 로컬스토리지 삭제를 위한 플래그
+      }
+    });
   } catch (error) {
+    console.error('Delete user error:', error);
     next(error);
   }
 };

@@ -4,6 +4,8 @@ import { IUserSignup } from '../types/auth.types';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import { Department } from '../models';
+import { Task } from '../models';
+import { Notification } from '../models';
 
 class UserService {
   // 전체 사용자 조회
@@ -105,24 +107,39 @@ class UserService {
   }
 
   // 사용자 삭제
-  async deleteUser(id: string): Promise<ApiResponse> {
+  async deleteUser(userId: string): Promise<ApiResponse> {
     try {
-      const user = await User.findByIdAndDelete(id);
-      
-      if (!user) {
-        return {
-          success: false,
-          message: '사용자를 찾을 수 없습니다.',
-          status: 404
-        };
-      }
+      // 순차적으로 관련 데이터 삭제
+      await Promise.all([
+        // 사용자가 생성한 업무 삭제
+        Task.deleteMany({ author: userId }),
+        
+        Notification.updateMany(
+          { 
+            $or: [
+              { recipients: userId },
+              { readBy: userId }
+            ]
+          },
+          { 
+            $pull: { 
+              recipients: userId,
+              readBy: userId 
+            }
+          }
+        ),
+        
+        // 최종적으로 사용자 삭제
+        User.findByIdAndDelete(userId)
+      ]);
 
       return {
         success: true,
-        message: '사용자가 삭제되었습니다.'
+        message: '회원 탈퇴가 완료되었습니다.'
       };
     } catch (error) {
-      throw new Error('사용자 삭제 중 오류가 발생했습니다.');
+      console.error('User deletion error:', error);
+      throw new Error('회원 탈퇴 처리 중 오류가 발생했습니다.');
     }
   }
 

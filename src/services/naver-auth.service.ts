@@ -30,7 +30,13 @@ export class NaverAuthService {
       return {
         id: profile.id,
         emails: [{ value: profile.email }],
-        displayName: profile.nickname
+        displayName: profile.nickname,
+        profile_image: profile.profile_image,
+        _json: {
+          email: profile.email,
+          nickname: profile.nickname,
+          profile_image: profile.profile_image
+        }
       };
     } catch (error) {
       console.error('Naver token verification error:', error);
@@ -41,7 +47,7 @@ export class NaverAuthService {
   async handleNaverAuth(profile: NaverProfile): Promise<ApiResponse<LoginResponse>> {
     try {
       let user = await User.findOne({
-        email: profile.emails[0].value,
+        email: profile._json.email,
         registerType: 'naver'
       });
 
@@ -52,11 +58,12 @@ export class NaverAuthService {
 
       if (!user) {
         user = await User.create({
-          email: profile.emails[0].value,
-          name: profile.displayName,
+          email: profile._json.email,
+          name: profile._json.nickname,
           registerType: 'naver',
           socialId: profile.id,
           department: defaultDepartment._id,
+          profileImage: profile._json.profile_image,
           role: 'user'
         });
       }
@@ -73,7 +80,8 @@ export class NaverAuthService {
             email: user.email,
             name: user.name,
             role: user.role,
-            department: defaultDepartment?._id
+            department: defaultDepartment?._id,
+            profileImage: user.profileImage
           }
         }
       };

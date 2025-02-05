@@ -84,8 +84,10 @@ export const naverAuthMiddleware = (
 ) => {
   try {
     const state = req.query.redirect_uri
-      ? Buffer.from(req.query.redirect_uri as string).toString('base64')
-      : Buffer.from(process.env.CLIENT_URL || 'http://localhost:5173').toString('base64');
+      ? Buffer.from(req.query.redirect_uri as string).toString("base64")
+      : Buffer.from(process.env.CLIENT_URL || "http://localhost:5173").toString(
+          "base64"
+        );
 
     const authUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${process.env.NAVER_CLIENT_ID}&redirect_uri=${process.env.NAVER_CALLBACK_URL}&state=${state}`;
     

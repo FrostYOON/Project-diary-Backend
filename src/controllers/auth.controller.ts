@@ -63,50 +63,8 @@ export const logoutController = async (
   }
 };
 
-// 구글 로그인 콜백 핸들러
-const handleGoogleCallback = (req: Request, res: Response) => {
-  if (!req.user) {
-    const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    return res.redirect(`${redirectUrl}/login?error=authentication_failed`);
-  }
-
-  const user = req.user as any;
-  const accessToken = user.accessToken;
-
-  if (!accessToken) {
-    console.error('No token found in user object:', user);
-    const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    return res.redirect(`${redirectUrl}/login?error=token_missing`);
-  }
-
-  tokenService.setCookie(res, accessToken);
-  const redirectUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
-  return res.redirect(`${redirectUrl}/auth/callback?accessToken=${accessToken}`);
-};
-
-// 네이버 로그인 콜백 핸들러
-const handleNaverCallback = (req: Request, res: Response) => {
-  if (!req.user) {
-    const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    return res.redirect(`${redirectUrl}/login?error=authentication_failed`);
-  }
-
-  const user = req.user as any;
-  const accessToken = user.accessToken;
-
-  if (!accessToken) {
-    console.error('No token found in user object:', user);
-    const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    return res.redirect(`${redirectUrl}/login?error=token_missing`);
-  }
-
-  tokenService.setCookie(res, accessToken);
-  const redirectUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
-  return res.redirect(`${redirectUrl}/auth/callback?accessToken=${accessToken}`);
-};
-
-// 카카오 로그인 콜백 핸들러
-const handleKakaoCallback = (req: Request, res: Response) => {
+// 소셜 로그인 공통 콜백 핸들러
+const handleSocialCallback = (req: Request, res: Response) => {
   if (!req.user) {
     const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     return res.redirect(`${redirectUrl}/login?error=authentication_failed`);
@@ -131,9 +89,9 @@ export const authController = {
   signUp: signUpController,
   login: loginController,
   logout: logoutController,
-  googleCallback: handleGoogleCallback,
-  naverCallback: handleNaverCallback,
-  kakaoCallback: handleKakaoCallback,
+  googleCallback: handleSocialCallback,
+  naverCallback: handleSocialCallback,
+  kakaoCallback: handleSocialCallback,
 };
 
 

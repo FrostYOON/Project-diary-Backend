@@ -27,14 +27,14 @@ const jwtOptions = {
 const googleConfig: StrategyOptionsWithRequest = {
   clientID: process.env.GOOGLE_CLIENT_ID || "",
   clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-  callbackURL: "http://localhost:3001/api/v1/auth/login/google/callback",
+  callbackURL: process.env.GOOGLE_CALLBACK_URL || "",
   passReqToCallback: true,
 };
 
 // Kakao OAuth 설정
 const kakaoConfig = {
-  clientID: process.env.KAKAO_CLIENT_ID || '',
-  callbackURL: 'http://localhost:3001/api/v1/auth/login/kakao/callback'
+  clientID: process.env.KAKAO_CLIENT_ID || "",
+  callbackURL: process.env.KAKAO_CALLBACK_URL || ""
 };
 
 // Kakao 전략 설정
@@ -88,7 +88,7 @@ passport.use(
 const naverConfig: StrategyOption = {
   clientID: process.env.NAVER_CLIENT_ID || "",
   clientSecret: process.env.NAVER_CLIENT_SECRET || "",
-  callbackURL: process.env.NAVER_CALLBACK_URL || 'http://localhost:3001/api/v1/auth/login/naver/callback'
+  callbackURL: process.env.NAVER_CALLBACK_URL || ""
 };
 
 // Naver 전략 설정
@@ -96,14 +96,10 @@ passport.use(
   new NaverStrategy(
     naverConfig,
     async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+      console.log(profile);
       try {
-        const naverProfile: NaverProfile = {
-          id: profile._json.id,
-          emails: [{ value: profile._json.email }],
-          displayName: profile._json.nickname
-        };
 
-        const result = await naverAuthService.handleNaverAuth(naverProfile);
+        const result = await naverAuthService.handleNaverAuth(profile as NaverProfile);
         
         if (!result.data || !result.data.user) {
           return done(new Error("사용자 정보를 가져올 수 없습니다."), false);
