@@ -26,6 +26,13 @@ export interface GoogleProfile {
   displayName: string;
 }
 
+// 네이버 프로필 타입
+export interface NaverProfile {
+  id: string;
+  emails: Array<{ value: string }>;
+  displayName: string;
+}
+
 // 카카오 프로필 타입
 export interface KakaoProfile {
   id: string;
