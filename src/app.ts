@@ -1,8 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
-import morgan from 'morgan';
 import passport from 'passport';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
@@ -13,10 +11,6 @@ import { errorHandler } from './middlewares/error.middleware';
 import routes from './routes/api/v1/index';
 import './config/passport';  // Passport 설정 import
 import { customLogger } from './middlewares/logger.middleware';
-import userRouter from './routes/api/v1/user.routes';
-import departmentRouter from './routes/api/v1/department.routes';
-import projectRouter from './routes/api/v1/project.routes';
-import authRouter from './routes/api/v1/auth.routes';
 
 dotenv.config();
 

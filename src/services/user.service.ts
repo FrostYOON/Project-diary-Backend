@@ -1,25 +1,11 @@
 import { User } from '../models';
 import { ApiResponse } from '../types/response.types';
-import { IUserSignup } from '../types/user.types';
+import { IUserSignup } from '../types/auth.types';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import { Department } from '../models';
 
 class UserService {
-  // 사용자 생성
-  async createUser(userData: IUserSignup): Promise<ApiResponse> {
-    try {
-      const user = await User.create(userData);
-      return {
-        success: true,
-        message: '사용자가 생성되었습니다.',
-        data: { user }
-      };
-    } catch (error) {
-      throw new Error('사용자 생성 중 오류가 발생했습니다.');
-    }
-  }
-
   // 전체 사용자 조회
   async getAllUsers(): Promise<ApiResponse> {
     try {
