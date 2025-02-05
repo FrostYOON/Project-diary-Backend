@@ -1,0 +1,141 @@
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { createProject, updateProject, deleteProject, projectService } from '../services/project.service';
+import { IUser } from '../types/user.types';
+import { Project } from '../models';
+
+// 프로젝트 목록 조회
+export const getProjectListController: RequestHandler = async (req, res, next): Promise<void> => {
+  try {
+    if (!req.user?._id || !req.user?.role) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
+      return;
+    }
+
+    const result = await projectService.getProjectList(
+      req.user._id.toString(),
+      req.user.role
+    );
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 프로젝트 상세 조회
+export const getProjectByIdController: RequestHandler = async (req, res, next) => {
+  try {
+    const projectId = req.params.id;
+    const project = await Project.findById(projectId)
+      .populate('department', 'name')
+      .populate('members', 'name email')
+      .populate('author', 'name email');
+
+    if (!project) {
+      res.status(404).json({
+        success: false,
+        message: '프로젝트를 찾을 수 없습니다.'
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: '프로젝트 상세 조회 성공',
+      data: { project }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+interface AuthenticatedRequest extends Request {
+  user: IUser;
+}
+
+// 프로젝트 생성
+export const createProjectController: RequestHandler<{}, any, any, any, { user: IUser }> = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: '인증이 필요합니다.'
+      });
+      return;
+    }
+
+    const projectData = {
+      ...req.body,
+      author: req.user._id
+    };
+    const newProject = await createProject(projectData);
+    res.status(201).json({
+      success: true,
+      message: '프로젝트가 생성되었습니다.',
+      data: newProject
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 프로젝트 수정
+export const updateProjectController: RequestHandler = async (req, res, next) => {
+  try {
+    const projectId = req.params.id;
+    const updateData = req.body;
+    const result = await updateProject(projectId, updateData);
+    
+    res.status(200).json({
+      success: true,
+      message: '프로젝트가 수정되었습니다.',
+      data: { project: result }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 프로젝트 삭제
+export const deleteProjectController = async (req: Request, res: Response) => {
+    const projectId = req.params.id;
+    await deleteProject(projectId);
+    res.status(204).json({
+      success: true,
+      message: '프로젝트가 삭제되었습니다.'
+    });
+};
+
+export const getProjectsByDepartmentAndUserController: RequestHandler = async (req, res, next) => {
+  try {
+    const { departmentId, userId } = req.query;
+
+    if (!departmentId || !userId) {
+      res.status(400).json({
+        success: false,
+        message: 'departmentId와 userId는 필수 파라미터입니다.'
+      });
+      return;
+    }
+
+    const result = await projectService.getProjectsByDepartmentAndUser(
+      departmentId as string,
+      userId as string
+    );
+
+    if (result.status) {
+      res.status(result.status).json(result);
+      return;
+    }
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
