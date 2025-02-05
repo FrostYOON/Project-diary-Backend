@@ -75,3 +75,23 @@ export const googleAuthMiddleware = (
     return next(new AuthError("구글 인증 처리 중 오류가 발생했습니다."));
   }
 };
+
+// 네이버 인증 미들웨어
+export const naverAuthMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const state = req.query.redirect_uri
+      ? Buffer.from(req.query.redirect_uri as string).toString('base64')
+      : Buffer.from(process.env.CLIENT_URL || 'http://localhost:5173').toString('base64');
+
+    const authUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${process.env.NAVER_CLIENT_ID}&redirect_uri=${process.env.NAVER_CALLBACK_URL}&state=${state}`;
+    
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error('Naver auth error:', error);
+    next(new AuthError('네이버 인증 처리 중 오류가 발생했습니다.'));
+  }
+};

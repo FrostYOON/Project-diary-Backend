@@ -5,12 +5,15 @@ import {
   Strategy as GoogleStrategy,
   StrategyOptionsWithRequest,
 } from "passport-google-oauth20";
+import { Strategy as NaverStrategy, StrategyOption } from 'passport-naver';
 import { User } from "../models";
 import dotenv from "dotenv";
 import { Request } from "express";
 import { IUser } from "../types/user.types";
 import { googleAuthService } from "../services/google-auth.service";
 import { GoogleProfile } from "../types/auth.types";
+import { naverAuthService } from "../services/naver-auth.service";
+import { NaverProfile } from "../types/auth.types";
 import bcrypt from "bcrypt";
 dotenv.config();
 
@@ -46,6 +49,43 @@ passport.use(
         return done(null, userWithToken);
       } catch (error) {
         console.error('Google strategy error:', error);
+        return done(error, false);
+      }
+    }
+  )
+);
+
+// Naver OAuth 설정
+const naverConfig: StrategyOption = {
+  clientID: process.env.NAVER_CLIENT_ID || "",
+  clientSecret: process.env.NAVER_CLIENT_SECRET || "",
+  callbackURL: process.env.NAVER_CALLBACK_URL || 'http://localhost:3001/api/v1/auth/login/naver/callback'
+};
+
+// Naver 전략 설정
+passport.use(
+  new NaverStrategy(
+    naverConfig,
+    async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+      try {
+        const naverProfile: NaverProfile = {
+          id: profile._json.id,
+          emails: [{ value: profile._json.email }],
+          displayName: profile._json.nickname
+        };
+
+        const result = await naverAuthService.handleNaverAuth(naverProfile);
+        
+        if (!result.data || !result.data.user) {
+          return done(new Error("사용자 정보를 가져올 수 없습니다."), false);
+        }
+        
+        return done(null, {
+          ...result.data.user,
+          accessToken: result.data.accessToken
+        });
+      } catch (error) {
+        console.error('Naver strategy error:', error);
         return done(error, false);
       }
     }

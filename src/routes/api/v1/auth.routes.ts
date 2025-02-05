@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authController } from '../../../controllers/auth.controller';
 import { signUpValidator } from '../../../validators/auth.validator';
-import { validateAuth, localAuthMiddleware, googleAuthMiddleware } from '../../../middlewares/auth.middleware';
+import { validateAuth, localAuthMiddleware, googleAuthMiddleware, naverAuthMiddleware } from '../../../middlewares/auth.middleware';
 import passport from 'passport';
 
 const router = Router();
@@ -22,6 +22,15 @@ router.get('/login/google', googleAuthMiddleware);
 router.get('/login/google/callback', 
   passport.authenticate('google', { session: false }), 
   authController.googleCallback
+);
+
+// 네이버 로그인
+router.get('/login/naver', naverAuthMiddleware);
+
+// 네이버 로그인 콜백
+router.get('/login/naver/callback', 
+  passport.authenticate('naver', { session: false }), 
+  authController.naverCallback
 );
 
 export default router;
