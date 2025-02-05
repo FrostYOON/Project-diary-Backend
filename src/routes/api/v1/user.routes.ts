@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { 
-  createUserController,
   getAllUsersController,
   getUserByIdController,
   updateUserController,
@@ -30,7 +29,6 @@ router.get('/department/:departmentId', getUsersByDepartmentController);
 router.get('/role', getUserRoleController);
 
 // 일반적인 CRUD 라우트
-router.post('/', createUserController);
 router.get('/', getAllUsersController);
 router.get('/:id', getUserByIdController);
 router.put('/:id', updateUserController);
