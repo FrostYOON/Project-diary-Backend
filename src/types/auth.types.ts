@@ -24,6 +24,7 @@ export interface GoogleProfile {
   id: string;
   emails: Array<{ value: string }>;
   displayName: string;
+  photos: Array<{ value: string }>;
 }
 
 // 네이버 프로필 타입

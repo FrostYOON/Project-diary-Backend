@@ -43,7 +43,8 @@ export class GoogleAuthService {
           registerType: 'google',
           socialId: profile.id,
           department: defaultDepartment._id,
-          role: 'user'
+          role: 'user',
+          profileImage: profile.photos[0].value
         });
       }
 
@@ -59,7 +60,8 @@ export class GoogleAuthService {
             email: user.email,
             name: user.name,
             role: user.role,
-            department: defaultDepartment?._id
+            department: defaultDepartment?._id,
+            profileImage: user.profileImage
           }
         }
       };
