@@ -84,12 +84,33 @@ const handleGoogleCallback = (req: Request, res: Response) => {
   return res.redirect(`${redirectUrl}/auth/callback?accessToken=${accessToken}`);
 };
 
+const handleKakaoCallback = (req: Request, res: Response) => {
+  if (!req.user) {
+    const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    return res.redirect(`${redirectUrl}/login?error=authentication_failed`);
+  }
+
+  const user = req.user as any;
+  const accessToken = user.accessToken;
+
+  if (!accessToken) {
+    console.error('No token found in user object:', user);
+    const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    return res.redirect(`${redirectUrl}/login?error=token_missing`);
+  }
+
+  tokenService.setCookie(res, accessToken);
+  const redirectUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+  return res.redirect(`${redirectUrl}/auth/callback?accessToken=${accessToken}`);
+};
+
 export const authController = {
   // 기존 로그인/회원가입 컨트롤러는 유지
   signUp: signUpController,
   login: loginController,
   logout: logoutController,
   googleCallback: handleGoogleCallback,
+  kakaoCallback: handleKakaoCallback,
 };
 
 
