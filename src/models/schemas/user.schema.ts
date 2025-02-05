@@ -25,6 +25,7 @@ const UserSchema: Schema<IUser> = new Schema({
     required: true,
     default: "user",
   },
+  profileImage: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
