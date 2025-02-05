@@ -26,6 +26,20 @@ export interface GoogleProfile {
   displayName: string;
 }
 
+// 카카오 프로필 타입
+export interface KakaoProfile {
+  id: string;
+  _json: {
+    kakao_account: {
+      email: string;
+      profile: {
+        nickname: string;
+        profile_image_url: string;
+      }
+    }
+  }
+}
+
 // 에러 타입
 export class AuthError extends Error {
   constructor(message: string) {

@@ -1,6 +1,6 @@
 import { Document, Types } from "mongoose";
 
-export const AUTH_TYPES = ['normal', 'google'];
+export const AUTH_TYPES = ['normal', 'google', 'kakao'];
 export const USER_ROLES = ['user', 'manager', 'admin'];
 
 export type AuthType = typeof AUTH_TYPES[number];
@@ -18,6 +18,7 @@ export interface IUser extends Document<Types.ObjectId> {
   registerType: AuthType;
   socialId?: string;
   role: UserRole;
+  profileImage?: string;
   createdAt: Date;
   updatedAt: Date;
 }
