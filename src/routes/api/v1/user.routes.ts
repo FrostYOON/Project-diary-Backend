@@ -7,7 +7,8 @@ import {
   getMeController,
   getUsersByDepartmentController,
   changePasswordController,
-  getUserRoleController
+  getUserRoleController,
+  updateProfileImageController
 } from '../../../controllers/user.controller';
 import { changePasswordValidator, updateUserValidator } from '../../../validators/user.validator';
 
@@ -18,6 +19,9 @@ router.get('/me', getMeController);
 
 // 본인 회원정보 수정
 router.put("/me", updateUserValidator, updateUserController);
+
+// 프로필 이미지 수정
+router.put("/me/profileImage", updateProfileImageController);
 
 // 본인 비밀번호 변경
 router.put("/me/password", changePasswordValidator, changePasswordController);

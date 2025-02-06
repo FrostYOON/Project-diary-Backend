@@ -177,4 +177,21 @@ export const changePasswordController: RequestHandler = async (req, res, next) =
   } catch (error) {
     next(error);
   }
-}; 
+};
+
+// 프로필 이미지 수정
+export const updateProfileImageController: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user?._id) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
+      return;
+    }
+    const result = await userService.updateProfileImage(req.user._id.toString(), req.body.profileImage);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
