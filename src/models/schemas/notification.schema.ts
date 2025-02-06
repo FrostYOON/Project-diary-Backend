@@ -15,7 +15,8 @@ const NotificationSchema: Schema<INotification> = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],
-  createdAt: { type: Date, default: Date.now }
+}, {
+  timestamps: true
 });
 
 export default NotificationSchema;
