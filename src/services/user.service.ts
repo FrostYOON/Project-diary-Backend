@@ -106,6 +106,28 @@ class UserService {
     }
   }
 
+  // 프로필 이미지 수정
+  async updateProfileImage(userId: string, profileImage: string): Promise<ApiResponse> {
+    try {
+      const user = await User.findById(userId);
+
+      if (!user) {
+        throw new Error('사용자를 찾을 수 없습니다.');
+      }
+
+      if (!profileImage) {
+        await user.updateOne({ $unset: { profileImage: profileImage } });
+      } else {
+        user.profileImage = profileImage;
+      }
+      await user.save();
+      
+      return { success: true, message: '프로필 이미지 수정 성공', data: { user } };
+    } catch (error) {
+      throw new Error('프로필 이미지 수정 중 오류가 발생했습니다.');
+    }
+  }
+
   // 사용자 삭제
   async deleteUser(userId: string): Promise<ApiResponse> {
     try {
