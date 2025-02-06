@@ -1,0 +1,135 @@
+tags:
+  - name: Projects
+    description: 프로젝트 관리 API
+
+paths:
+  /api/v1/projects:
+    get:
+      summary: 프로젝트 목록 조회
+      tags: [Projects]
+      responses:
+        200:
+          description: 프로젝트 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+    
+    post:
+      summary: 프로젝트 생성
+      tags: [Projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - startDate
+                - endDate
+                - status
+                - author
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                status:
+                  type: string
+                  enum: ['준비', '진행중', '완료', '보류']
+                members:
+                  type: array
+                  items:
+                    type: string
+                    format: objectId
+                author:
+                  type: string
+                  format: objectId
+
+  /api/v1/projects/{id}:
+    get:
+      summary: 프로젝트 상세 조회
+      tags: [Projects]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: 프로젝트 ID
+      responses:
+        200:
+          description: 프로젝트 조회 성공
+          
+    put:
+      summary: 프로젝트 수정
+      tags: [Projects]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: 프로젝트 ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+              
+    delete:
+      summary: 프로젝트 삭제
+      tags: [Projects]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: 프로젝트 ID
+
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: ['준비', '진행중', '완료', '보류']
+        members:
+          type: array
+          items:
+            type: string
+        author:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string 

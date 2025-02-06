@@ -1,6 +1,7 @@
 import connectDB from './config/database';
 import app from './app';
 import dotenv from 'dotenv';
+import { initScheduler } from './config/scheduler';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ const server = async () => {
     // 서버 실행
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
+      initScheduler();  // 스케줄러 초기화
     });
   } catch (error) {
     console.error('Server 실행 오류:', error);

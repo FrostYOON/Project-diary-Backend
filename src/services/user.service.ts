@@ -1,0 +1,284 @@
+import { User } from '../models';
+import { ApiResponse } from '../types/response.types';
+import { IUserSignup } from '../types/auth.types';
+import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
+import { Department } from '../models';
+import { Task } from '../models';
+import { Notification } from '../models';
+
+class UserService {
+  // 전체 사용자 조회
+  async getAllUsers(): Promise<ApiResponse> {
+    try {
+      const users = await User.find()
+        .select('-password -socialId')
+        .populate('department', 'name');
+      return {
+        success: true,
+        message: '사용자 목록 조회 성공',
+        data: { users }
+      };
+    } catch (error) {
+      throw new Error('사용자 목록 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 특정 사용자 조회
+  async getUserById(id: string): Promise<ApiResponse> {
+    try {
+      const user = await User.findById(id)
+        .select('-password -socialId')
+        .populate('department', 'name');
+      
+      if (!user) {
+        return {
+          success: false,
+          message: '사용자를 찾을 수 없습니다.',
+          status: 404
+        };
+      }
+
+      return {
+        success: true,
+        message: '사용자 조회 성공',
+        data: { user }
+      };
+    } catch (error) {
+      throw new Error('사용자 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 사용자 권한 조회
+  async getUserRole(userId: string): Promise<ApiResponse> {
+    try {
+      const user = await User.findById(userId);
+      return { success: true, message: '사용자 권한 조회 성공', data: { role: user?.role } };
+    } catch (error) {
+      throw new Error('사용자 권한 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 사용자 정보 수정
+  async updateUser(id: string, data: Partial<IUserSignup>): Promise<ApiResponse> {
+    try {
+      const { email, password, ...updateData } = data;
+      const user = await User.findByIdAndUpdate(
+        id,
+        updateData,
+        { 
+          new: true,
+          runValidators: true 
+        }
+      )
+      .select('-password -socialId')
+      .populate('department', 'name');
+
+      if (!user) {
+        return {
+          success: false,
+          message: '사용자를 찾을 수 없습니다.',
+          status: 404
+        };
+      }
+
+      return {
+        success: true,
+        message: '회원정보가 수정되었습니다.',
+        data: { 
+          user: {
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            birth: user.birth,
+            department: user.department,
+            role: user.role,
+            registerType: user.registerType,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+          }
+        }
+      };
+    } catch (error) {
+      console.error('User update error:', error);
+      throw new Error('회원정보 수정 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 사용자 삭제
+  async deleteUser(userId: string): Promise<ApiResponse> {
+    try {
+      // 순차적으로 관련 데이터 삭제
+      await Promise.all([
+        // 사용자가 생성한 업무 삭제
+        Task.deleteMany({ author: userId }),
+        
+        Notification.updateMany(
+          { 
+            $or: [
+              { recipients: userId },
+              { readBy: userId }
+            ]
+          },
+          { 
+            $pull: { 
+              recipients: userId,
+              readBy: userId 
+            }
+          }
+        ),
+        
+        // 최종적으로 사용자 삭제
+        User.findByIdAndDelete(userId)
+      ]);
+
+      return {
+        success: true,
+        message: '회원 탈퇴가 완료되었습니다.'
+      };
+    } catch (error) {
+      console.error('User deletion error:', error);
+      throw new Error('회원 탈퇴 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 내 정보 조회
+  async getMyInfo(userId: string): Promise<ApiResponse> {
+    try {
+      const user = await User.findById(userId)
+        .select('-password -socialId')
+        .populate('department', 'name')
+        .lean();
+
+      if (!user) {
+        return {
+          success: false,
+          message: '사용자를 찾을 수 없습니다.',
+          status: 404
+        };
+      }
+
+      return {
+        success: true,
+        message: '내 정보 조회 성공',
+        data: { 
+          user: {
+            _id: user._id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            birth: user.birth,
+            department: user.department,
+            role: user.role,
+            registerType: user.registerType,
+            profileImage: user.profileImage,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+          }
+        }
+      };
+    } catch (error) {
+      console.error('User info lookup error:', error);
+      throw new Error('사용자 정보 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 비밀번호 변경
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<ApiResponse> {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return {
+          success: false,
+          message: '사용자를 찾을 수 없습니다.',
+          status: 404
+        };
+      }
+
+      // 소셜 로그인 사용자 체크
+      if (user.registerType === 'google') {
+        return {
+          success: false,
+          message: '소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다.',
+          status: 400
+        };
+      }
+
+      if (!user.password) {
+        return {
+          success: false,
+          message: '비밀번호가 설정되어 있지 않습니다.',
+          status: 400
+        };
+      }
+
+      // 현재 비밀번호 검증
+      const isPasswordCorrect = await bcrypt.compare(currentPassword, user.password);
+      if (!isPasswordCorrect) {
+        return {
+          success: false,
+          message: '현재 비밀번호가 일치하지 않습니다.',
+          status: 400
+        };
+      }
+
+      // 새 비밀번호 해시화
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+
+      return {
+        success: true,
+        message: '비밀번호가 변경되었습니다.'
+      };
+    } catch (error) {
+      throw new Error('비밀번호 변경 중 오류가 발생했습니다.');
+    }
+  }
+
+  async getUsersByDepartment(departmentId: string): Promise<ApiResponse> {
+    try {
+      let query;
+      if (departmentId === 'other') {
+        const otherDepartment = await Department.findOne({ name: 'other' });
+        if (!otherDepartment) {
+          return {
+            success: false,
+            message: '기본 부서를 찾을 수 없습니다.',
+            status: 404
+          };
+        }
+        query = { department: otherDepartment._id };
+      } else {
+        if (!mongoose.Types.ObjectId.isValid(departmentId)) {
+          return {
+            success: false,
+            message: '유효하지 않은 부서 ID입니다.',
+            status: 400
+          };
+        }
+        query = { department: departmentId };
+      }
+
+      const users = await User.find(query)
+        .select('-password -socialId')
+        .populate('department', 'name');
+
+      return {
+        success: true,
+        message: '부서별 사용자 목록 조회 성공',
+        data: { users }
+      };
+    } catch (error) {
+      console.error('부서별 사용자 조회 에러:', error);
+      return {
+        success: false,
+        message: '부서별 사용자 조회 중 오류가 발생했습니다.',
+        status: 500
+      };
+    }
+  }
+}
+
+export const userService = new UserService();

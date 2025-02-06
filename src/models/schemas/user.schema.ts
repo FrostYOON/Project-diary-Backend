@@ -1,10 +1,5 @@
 import { Schema } from "mongoose";
-import {
-  IUser,
-  DEPARTMENTS,
-  AUTH_TYPES,
-  USER_ROLES
-} from "../../types/user.types";
+import { IUser, AUTH_TYPES, USER_ROLES } from "../../types/user.types";
 
 const UserSchema: Schema<IUser> = new Schema({
   email: { type: String, required: true, unique: true },
@@ -13,10 +8,9 @@ const UserSchema: Schema<IUser> = new Schema({
   phone: { type: String },
   birth: { type: Date },
   department: {
-    type: String,
-    enum: DEPARTMENTS,
+    type: Schema.Types.ObjectId,
+    ref: "Department",
     required: true,
-    default: "other",
   },
   registerType: {
     type: String,
@@ -31,6 +25,7 @@ const UserSchema: Schema<IUser> = new Schema({
     required: true,
     default: "user",
   },
+  profileImage: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
