@@ -84,13 +84,20 @@ class NotificationService {
   async createProjectNotification(project: IProject) {
     try {
       const recipients = await this.getNotificationRecipients(project);
-      await Notification.create({
+      const notification = await Notification.create({
         title: '새 프로젝트 생성',
         content: `새 프로젝트 "${project.title}"가 생성되었습니다.`,
         type: 'PROJECT_CREATED',
         project: project._id,
         recipients
       });
+
+      await User.updateMany(
+        { _id: { $in: recipients } },
+        { $push: { notifications: notification._id } }
+      );
+
+      return notification;
     } catch (error) {
       console.error('프로젝트 생성 알림 중 오류:', error);
       throw error;
@@ -101,13 +108,20 @@ class NotificationService {
   async createProjectCancelNotification(project: IProject) {
     try {
       const recipients = await this.getNotificationRecipients(project);
-      await Notification.create({
-        title: '프로젝트 철회',
-        content: `프로젝트 "${project.title}"가 취소되었습니다.`,
+      const notification = await Notification.create({
+        title: '프로젝트 취소',
+        content: `프로젝트가 취소되었습니다.`,
         type: 'PROJECT_CANCELED',
         project: project._id,
         recipients
       });
+
+      await User.updateMany(
+        { _id: { $in: recipients } },
+        { $push: { notifications: notification._id } }
+      );
+
+      return notification;
     } catch (error) {
       console.error('프로젝트 취소 알림 중 오류:', error);
       throw error;
@@ -126,17 +140,22 @@ class NotificationService {
         .populate('project', 'title')
         .sort({ createdAt: -1 });
 
-      // 사용자별 알림 상태 처리
-      return notifications.map(notification => {
-        const notificationObj = notification.toObject();
-        return {
-          ...notificationObj,
-          isRead: notification.readBy.includes(new Types.ObjectId(userId)),
-          // 현재 사용자 기준으로 recipients, readBy 필터링
-          recipients: notification.recipients.filter(id => id.toString() === userId),
-          readBy: notification.readBy.filter(id => id.toString() === userId)
-        };
-      });
+      // 빈 알림 삭제 및 필터링
+      const filteredNotifications = [];
+      for (const notification of notifications) {
+        if (notification.recipients.length === 0 && notification.readBy.length === 0) {
+          await Notification.findByIdAndDelete(notification._id);
+        } else {
+          filteredNotifications.push({
+            ...notification.toObject(),
+            isRead: notification.readBy.includes(new Types.ObjectId(userId)),
+            recipients: notification.recipients.filter(id => id.toString() === userId),
+            readBy: notification.readBy.filter(id => id.toString() === userId)
+          });
+        }
+      }
+
+      return filteredNotifications;
     } catch (error) {
       console.error('알림 목록 조회 중 오류:', error);
       throw error;
@@ -146,17 +165,6 @@ class NotificationService {
   // 알림 읽음 처리
   async markAsRead(notificationId: string, userId: string) {
     try {
-      // 먼저 알림이 존재하는지 확인
-      const existingNotification = await Notification.findById(notificationId);
-      if (!existingNotification) {
-        throw new Error('알림을 찾을 수 없습니다.');
-      }
-
-      // 이미 읽은 알림인지 확인
-      if (existingNotification.readBy.includes(new Types.ObjectId(userId))) {
-        return existingNotification;
-      }
-
       // 알림 업데이트
       const notification = await Notification.findOneAndUpdate(
         { _id: notificationId },
@@ -171,8 +179,13 @@ class NotificationService {
         throw new Error('알림을 찾을 수 없습니다.');
       }
 
+      await User.findByIdAndUpdate(userId, {
+        $pull: { notifications: notificationId },
+        $push: { readNotifications: notificationId }
+      });
+
       // recipients 배열이 비어있으면 알림 완전 삭제
-      if (notification.recipients.length === 0) {
+      if (notification.recipients.length === 0 && notification.readBy.length === 0) {
         await Notification.findByIdAndDelete(notificationId);
         return null;
       }
@@ -196,6 +209,10 @@ class NotificationService {
       if (!notification) {
         throw new Error('알림을 찾을 수 없습니다.');
       }
+
+      await User.findByIdAndUpdate(userId, {
+        $pull: { readNotifications: notificationId }
+      });
 
       // recipients 배열이 비어있으면 알림 완전 삭제
       if (notification.recipients.length === 0 && notification.readBy.length === 0) {

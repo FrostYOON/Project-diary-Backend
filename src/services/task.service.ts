@@ -1,4 +1,4 @@
-import { Task } from "../models";
+import { Task, User } from "../models";
 import { ITask } from "../types/task.types";
 import { ApiResponse } from "../types/response.types";
 
@@ -19,7 +19,11 @@ class TaskService {
         ...taskData,
         project: taskData.projectId  // projectId를 project 필드로 매핑
       });
-      
+
+      await User.findByIdAndUpdate(taskData.author, {
+        $push: { tasks: task._id }
+      });
+
       const populatedTask = await Task.findById(task._id)
         .populate('author', 'name')
         .populate('project', 'title');
@@ -123,7 +127,7 @@ class TaskService {
   // 업무 삭제
   async deleteTask(id: string): Promise<ApiResponse> {
     try {
-      const task = await Task.findByIdAndDelete(id);
+      const task = await Task.findById(id);
       if (!task) {
         return {
           success: false,
@@ -131,6 +135,13 @@ class TaskService {
           status: 404
         };
       }
+
+      await User.findByIdAndUpdate(task.author, {
+        $pull: { tasks: id }
+      });
+
+      await Task.findByIdAndDelete(id);
+
       return {
         success: true,
         message: '업무가 삭제되었습니다.'

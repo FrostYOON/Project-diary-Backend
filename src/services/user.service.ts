@@ -139,29 +139,16 @@ class UserService {
   // 사용자 삭제
   async deleteUser(userId: string): Promise<ApiResponse> {
     try {
-      // 순차적으로 관련 데이터 삭제
-      await Promise.all([
-        // 사용자가 생성한 업무 삭제
-        Task.deleteMany({ author: userId }),
-        
-        Notification.updateMany(
-          { 
-            $or: [
-              { recipients: userId },
-              { readBy: userId }
-            ]
-          },
-          { 
-            $pull: { 
-              recipients: userId,
-              readBy: userId 
-            }
-          }
-        ),
-        
-        // 최종적으로 사용자 삭제
-        User.findByIdAndDelete(userId)
-      ]);
+      const user = await User.findById(userId);
+      if (!user) {
+        return {
+          success: false,
+          message: '사용자를 찾을 수 없습니다.',
+          status: 404
+        };
+      }
+
+      await user.deleteOne();
 
       return {
         success: true,
