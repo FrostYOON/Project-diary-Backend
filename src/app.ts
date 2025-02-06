@@ -78,4 +78,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // 에러 핸들링
 app.use(errorHandler);
 
+app.use('/uploads', express.static('uploads'));
+
 export default app;
