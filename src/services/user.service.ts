@@ -115,14 +115,22 @@ class UserService {
         throw new Error('사용자를 찾을 수 없습니다.');
       }
 
-      if (!profileImage) {
-        await user.updateOne({ $unset: { profileImage: profileImage } });
-      } else {
-        user.profileImage = profileImage;
-      }
+      // 서버 기본 URL 추가
+      const serverUrl = process.env.NODE_ENV === 'production' 
+        ? process.env.SERVER_URL 
+        : 'http://localhost:3001';
+      const imageUrl = `${serverUrl}${profileImage}`;
+      
+      user.profileImage = imageUrl;
       await user.save();
       
-      return { success: true, message: '프로필 이미지 수정 성공', data: { user } };
+      return { 
+        success: true, 
+        message: '프로필 이미지 수정 성공', 
+        data: { 
+          profileImage: imageUrl 
+        } 
+      };
     } catch (error) {
       throw new Error('프로필 이미지 수정 중 오류가 발생했습니다.');
     }

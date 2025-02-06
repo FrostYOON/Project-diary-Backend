@@ -11,6 +11,7 @@ import {
   updateProfileImageController,
 } from '../../../controllers/user.controller';
 import { changePasswordValidator, updateUserValidator } from '../../../validators/user.validator';
+import { upload } from '../../../middlewares/upload.middleware';
 
 const router = Router();
 
@@ -20,8 +21,11 @@ router.get('/me', getMeController);
 // 본인 회원정보 수정
 router.put("/me", updateUserValidator, updateUserController);
 
-// 프로필 이미지 수정
-router.post("/me/profileImage", updateProfileImageController);
+// 프로필 이미지 업로드
+router.post('/me/profileImage', 
+  upload.single('file'),  // 'profileImage' -> 'file'로 변경
+  updateProfileImageController
+);
 
 // 본인 비밀번호 변경
 router.put("/me/password", changePasswordValidator, changePasswordController);
