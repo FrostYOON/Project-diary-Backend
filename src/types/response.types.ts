@@ -20,6 +20,7 @@ export interface AuthResponse {
     socialId?: string;
     role: string;
     department: Types.ObjectId;
+    profileImage?: string;
   };
 }
 

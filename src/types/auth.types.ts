@@ -12,6 +12,7 @@ export interface IUserSignup {
   department?: Types.ObjectId;
   role: UserRole;
   socialId?: string;
+  profileImage?: string;
 }
 
 // Passport Info 타입

@@ -37,6 +37,7 @@ class AuthService {
         department: department._id,  // 부서 이름을 ID로 변환
         registerType: 'normal',
         password: hashedPassword,
+        profileImage: '',
         role: 'user'
       });
 
@@ -57,6 +58,7 @@ class AuthService {
             socialId: user.socialId,
             role: user.role,
             department: department?._id,
+            profileImage: user.profileImage,
           }
         }
       };
