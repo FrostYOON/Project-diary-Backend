@@ -16,8 +16,8 @@ dotenv.config();
 
 const app = express();
 
-// 미들웨어 설정
-app.use(express.json());
+// 미들웨어 순서 중요
+app.use(express.json());  // JSON 파싱
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 // app.use(morgan('dev'));

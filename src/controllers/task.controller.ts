@@ -65,44 +65,35 @@ export const getTaskByIdController = async (
 // 업무 수정
 export const updateTaskController: RequestHandler = async (req, res, next) => {
   try {
-    if (!req.user?._id) {
-      res.status(401).json({
-        success: false,
-        message: '로그인이 필요합니다.'
-      });
-      return;
-    }
+    const taskId = req.params.id;
+    const updateData = req.body;
 
-    // 유효성 검사 결과 상세 로깅
-    const { title, startDate, endDate, status, priority, tag } = req.body;
-    const missingFields = [];
-    
-    if (!title) missingFields.push('title');
-    if (!startDate) missingFields.push('startDate');
-    if (!endDate) missingFields.push('endDate');
-    if (!status) missingFields.push('status');
-    if (!priority) missingFields.push('priority');
-    if (!tag) missingFields.push('tag');
-
-    if (missingFields.length > 0) {
-      console.log('Missing fields:', missingFields);
+    if (!taskId) {
       res.status(400).json({
         success: false,
-        message: '필수 항목이 누락되었습니다.',
-        missingFields: missingFields
+        message: '업무 ID가 필요합니다.'
       });
       return;
     }
 
-    const taskData = {
-      ...req.body,
-      project: req.body.projectId
-    };
+    // 빈 객체 체크 수정
+    if (!updateData) {
+      res.status(400).json({
+        success: false,
+        message: '수정할 데이터가 없습니다.',
+        debug: {
+          body: req.body,
+          contentType: req.headers['content-type']
+        }
+      });
+      return;
+    }
 
-    const result = await taskService.updateTask(req.params.id, taskData);
+    const result = await taskService.updateTask(taskId, updateData);
+    
     res.json(result);
   } catch (error) {
-    console.error('Task update error:', error);
+    console.error('Update task error:', error);
     next(error);
   }
 };
