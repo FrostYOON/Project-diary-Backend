@@ -1,4 +1,4 @@
-import { Project, Department } from "../models";
+import { Project, Department, User } from "../models";
 import mongoose, { Types } from 'mongoose';
 import notificationService from './notification.service';
 
@@ -9,11 +9,19 @@ export const createProject = async (projectData: any) => {
     if (projectData.department === 'other') {
       const otherDepartment = await Department.findOne({ name: 'other' });
       if (!otherDepartment) {
-        throw new Error('기본 부서를 찾을 수 없습니다.');
+        return {
+          success: false,
+          message: '기본 부서를 찾을 수 없습니다.',
+          status: 404
+        };
       }
       projectData.department = otherDepartment._id;
     } else if (!mongoose.Types.ObjectId.isValid(projectData.department)) {
-      throw new Error('유효하지 않은 부서 ID입니다.');
+      return {
+        success: false,
+        message: '유효하지 않은 부서 ID입니다.',
+        status: 400
+      };
     }
 
     // members가 없으면 빈 배열로 초기화
@@ -23,11 +31,28 @@ export const createProject = async (projectData: any) => {
 
     // author 확인
     if (!projectData.author) {
-      throw new Error('작성자 정보가 필요합니다.');
+      return {
+        success: false,
+        message: '작성자 정보가 필요합니다.',
+        status: 400
+      };
     }
 
     const project = await Project.create(projectData);
-    
+
+    // 프로젝트 생성자의 authoredProjects 업데이트
+    await User.findByIdAndUpdate(projectData.author, {
+      $push: { authoredProjects: project._id }
+    });
+
+    // 멤버들의 memberProjects 업데이트
+    if (projectData.members?.length > 0) {
+      await User.updateMany(
+        { _id: { $in: projectData.members } },
+        { $push: { memberProjects: project._id } }
+      );
+    }
+
     // 알림 생성
     await notificationService.createProjectNotification(project);
     
@@ -43,22 +68,65 @@ export const updateProject = async (id: string, updateData: any) => {
   // author 필드는 수정 불가능하도록
   delete updateData.author;
 
-  const project = await Project.findByIdAndUpdate(
-    id,
-    updateData,
-    {
-      new: true,
-      runValidators: true
+  try {
+    const oldProject = await Project.findById(id);
+    if (!oldProject) {
+      return {
+        success: false,
+        message: '프로젝트를 찾을 수 없습니다.',
+        status: 404
+      };
     }
-  )
-    .populate('department', 'name')
-    .populate('members', 'name')
-    .populate('author', 'name');
 
-  if (!project) {
-    throw new Error('프로젝트를 찾을 수 없습니다.');
+    // 멤버 변경이 있는 경우
+    if (updateData.members) {
+      // 기존 멤버에서 제외된 멤버들의 memberProjects에서 제거
+      const removedMembers = oldProject.members.filter(
+        (m: any) => !updateData.members.includes(m.toString())
+      );
+      if (removedMembers.length > 0) {
+        await User.updateMany(
+          { _id: { $in: removedMembers } },
+          { $pull: { memberProjects: id } }
+        );
+      }
+
+      // 새로 추가된 멤버들의 memberProjects에 추가
+      const newMembers = updateData.members.filter(
+        (m: string) => !oldProject.members.map((om: any) => om.toString()).includes(m)
+      );
+      if (newMembers.length > 0) {
+        await User.updateMany(
+          { _id: { $in: newMembers } },
+          { $push: { memberProjects: id } }
+        );
+      }
+    }
+
+    const project = await Project.findByIdAndUpdate(
+      id,
+      updateData,
+      {
+        new: true,
+        runValidators: true
+      }
+    )
+      .populate('department', 'name')
+      .populate('members', 'name')
+      .populate('author', 'name');
+
+    if (!project) {
+      return {
+        success: false,
+        message: '프로젝트를 찾을 수 없습니다.',
+        status: 404
+      };
+    }
+    return project;
+  } catch (error) {
+    console.error('프로젝트 수정 에러:', error);
+    throw error;
   }
-  return project;
 };
 
 // 프로젝트 삭제
@@ -66,8 +134,21 @@ export const deleteProject = async (id: string) => {
   try {
     const project = await Project.findById(id);
     if (!project) {
-      throw new Error('프로젝트를 찾을 수 없습니다.');
+      return {
+        success: false,
+        message: '프로젝트를 찾을 수 없습니다.',
+        status: 404
+      };
     }
+
+    await User.findByIdAndUpdate(project.author, {
+      $pull: { authoredProjects: id }
+    });
+
+    await User.updateMany(
+      { _id: { $in: project.members } },
+      { $pull: { memberProjects: id } }
+    );
 
     // 프로젝트 삭제 전에 알림 생성
     await notificationService.createProjectCancelNotification(project);
@@ -91,7 +172,11 @@ export const getProjectById = async (id: string) => {
     .lean();
   
   if (!project) {
-    throw new Error('프로젝트를 찾을 수 없습니다.');
+    return {
+      success: false,
+      message: '프로젝트를 찾을 수 없습니다.',
+      status: 404
+    };
   }
   return project;
 };

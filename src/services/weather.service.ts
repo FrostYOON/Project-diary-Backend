@@ -14,6 +14,7 @@ class WeatherService {
   private readonly cities = [
     { name: 'Seoul', lat: 37.5665, lon: 126.9780 },      // 서울
     { name: 'Incheon', lat: 37.4563, lon: 126.7052 },    // 인천
+    { name: 'Gunpo', lat: 37.4563, lon: 126.7052 },      // 군포
     { name: 'Suwon', lat: 37.2911, lon: 127.0089 },      // 수원
     { name: 'Seongnam', lat: 37.4386, lon: 127.1378 },   // 성남
     { name: 'Goyang', lat: 37.6583, lon: 126.8320 },     // 고양
@@ -26,7 +27,7 @@ class WeatherService {
     { name: 'Gwangju', lat: 35.1595, lon: 126.8526 },    // 광주
     { name: 'Ulsan', lat: 35.5384, lon: 129.3114 },      // 울산
     { name: 'Sejong', lat: 36.4801, lon: 127.2892 },     // 세종
-    { name: 'Jeonju', lat: 35.8242, lon: 127.1480 }      // 전주
+    { name: 'Jeonju', lat: 35.8242, lon: 127.1480 },      // 전주
   ];
 
   async getCitiesWeather(): Promise<ApiResponse<WeatherData[]>> {

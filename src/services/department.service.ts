@@ -1,19 +1,34 @@
-import { Department } from "../models/schemas/department.schema";
-import { IDepartment } from "../types/department.types";
+import { Department } from "../models";
 import { ApiResponse } from "../types/response.types";
 
 class DepartmentService {
   // 부서 생성
-  async createDepartment(data: IDepartment): Promise<ApiResponse> {
+  async createDepartment(name: string): Promise<ApiResponse> {
     try {
-      const department = await Department.create(data);
+      // 부서명 중복 체크
+      const existingDepartment = await Department.findOne({ name });
+      if (existingDepartment) {
+        return {
+          success: false,
+          message: '이미 존재하는 부서명입니다.',
+          status: 409
+        };
+      }
+
+      const department = await Department.create({ name });
+      
       return {
         success: true,
         message: '부서가 생성되었습니다.',
         data: { department }
       };
     } catch (error) {
-      throw new Error('부서 생성 중 오류가 발생했습니다.');
+      console.error('부서 생성 에러:', error); // 구체적인 에러 로깅
+      throw new Error(
+        error instanceof Error 
+          ? error.message 
+          : '부서 생성 중 오류가 발생했습니다.'
+      );
     }
   }
 
@@ -55,24 +70,50 @@ class DepartmentService {
   }
 
   // 부서 정보 수정
-  async updateDepartment(id: string, data: IDepartment): Promise<ApiResponse> {
+  async updateDepartment(departmentId: string, name: string): Promise<ApiResponse> {
     try {
-      const department = await Department.findByIdAndUpdate(id, data, { new: true });
+      // 1. 수정하려는 부서가 존재하는지 확인
+      const department = await Department.findById(departmentId);
       if (!department) {
         return {
           success: false,
-          message: '해당 부서를 찾을 수 없습니다.',
+          message: '존재하지 않는 부서입니다.',
           status: 404
         };
       }
-      
+
+      // 2. 새로운 부서명이 기존 부서와 중복되는지 확인 (자기 자신 제외)
+      const existingDepartment = await Department.findOne({ 
+        name, 
+        _id: { $ne: departmentId } 
+      });
+      if (existingDepartment) {
+        return {
+          success: false,
+          message: '이미 존재하는 부서명입니다.',
+          status: 409
+        };
+      }
+
+      // 3. 부서 정보 업데이트
+      const updatedDepartment = await Department.findByIdAndUpdate(
+        departmentId,
+        { name },
+        { new: true }
+      );
+
       return {
         success: true,
         message: '부서 정보가 수정되었습니다.',
-        data: { department }
+        data: { department: updatedDepartment }
       };
     } catch (error) {
-      throw new Error('부서 수정 중 오류가 발생했습니다.');
+      console.error('부서 수정 에러:', error);
+      throw new Error(
+        error instanceof Error 
+          ? error.message 
+          : '부서 수정 중 오류가 발생했습니다.'
+      );
     }
   }
 

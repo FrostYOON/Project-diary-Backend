@@ -3,6 +3,7 @@ import { User, Department } from '../models';
 import { userService } from '../services/user.service';
 import mongoose from 'mongoose';
 import { tokenService } from '../services/token.service';
+import { MulterError } from 'multer';
 
 
 export const getUserListController = async (
@@ -177,4 +178,31 @@ export const changePasswordController: RequestHandler = async (req, res, next) =
   } catch (error) {
     next(error);
   }
-}; 
+};
+
+// 프로필 이미지 수정
+export const updateProfileImageController: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user?._id) {
+      res.status(401).json({
+        success: false,
+        message: '로그인이 필요합니다.'
+      });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({
+        success: false,
+        message: '이미지 파일이 필요합니다.'
+      });
+      return;
+    }
+
+    const imageUrl = `/uploads/profiles/${req.file.filename}`;
+    const result = await userService.updateProfileImage(req.user._id.toString(), imageUrl);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};

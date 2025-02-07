@@ -14,12 +14,13 @@ export const getDepartmentController = async (req: Request, res: Response, next:
 
 // 부서 생성
 export const createDepartmentController = async (
-  req: Request<{}, {}, IDepartment>, 
+  req: Request<{}, {}, { name: string }>, 
   res: Response, 
   next: NextFunction
 ) => {
   try {
-    const result = await departmentService.createDepartment(req.body);
+    const { name } = req.body;
+    const result = await departmentService.createDepartment(name);
     res.status(201).json(result);
   } catch (error) {
     next(error);
@@ -46,12 +47,13 @@ export const getDepartmentByIdController = async (
 
 // 부서 정보 수정
 export const updateDepartmentController = async (
-  req: Request<{ id: string }, {}, IDepartment>, 
+  req: Request<{ id: string }, {}, { name: string }>, 
   res: Response, 
   next: NextFunction
 ): Promise<void> => {
   try {
-    const result = await departmentService.updateDepartment(req.params.id, req.body);
+    const { name } = req.body;
+    const result = await departmentService.updateDepartment(req.params.id, name);
     if (result.status) {
       res.status(result.status).json(result);
       return;
