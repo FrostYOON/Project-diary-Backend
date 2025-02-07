@@ -176,7 +176,11 @@ class NotificationService {
       );
 
       if (!notification) {
-        throw new Error('알림을 찾을 수 없습니다.');
+        return {
+          success: false,
+          message: '알림을 찾을 수 없습니다.',
+          status: 404
+        };
       }
 
       await User.findByIdAndUpdate(userId, {
@@ -207,7 +211,11 @@ class NotificationService {
       );
 
       if (!notification) {
-        throw new Error('알림을 찾을 수 없습니다.');
+        return {
+          success: false,
+          message: '알림을 찾을 수 없습니다.',
+          status: 404
+        };
       }
 
       await User.findByIdAndUpdate(userId, {

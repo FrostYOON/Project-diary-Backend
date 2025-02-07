@@ -11,7 +11,7 @@ class DepartmentService {
         return {
           success: false,
           message: '이미 존재하는 부서명입니다.',
-          status: 400
+          status: 409
         };
       }
 
@@ -91,7 +91,7 @@ class DepartmentService {
         return {
           success: false,
           message: '이미 존재하는 부서명입니다.',
-          status: 400
+          status: 409
         };
       }
 

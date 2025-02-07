@@ -9,11 +9,19 @@ export const createProject = async (projectData: any) => {
     if (projectData.department === 'other') {
       const otherDepartment = await Department.findOne({ name: 'other' });
       if (!otherDepartment) {
-        throw new Error('기본 부서를 찾을 수 없습니다.');
+        return {
+          success: false,
+          message: '기본 부서를 찾을 수 없습니다.',
+          status: 404
+        };
       }
       projectData.department = otherDepartment._id;
     } else if (!mongoose.Types.ObjectId.isValid(projectData.department)) {
-      throw new Error('유효하지 않은 부서 ID입니다.');
+      return {
+        success: false,
+        message: '유효하지 않은 부서 ID입니다.',
+        status: 400
+      };
     }
 
     // members가 없으면 빈 배열로 초기화
@@ -23,7 +31,11 @@ export const createProject = async (projectData: any) => {
 
     // author 확인
     if (!projectData.author) {
-      throw new Error('작성자 정보가 필요합니다.');
+      return {
+        success: false,
+        message: '작성자 정보가 필요합니다.',
+        status: 400
+      };
     }
 
     const project = await Project.create(projectData);
@@ -59,7 +71,11 @@ export const updateProject = async (id: string, updateData: any) => {
   try {
     const oldProject = await Project.findById(id);
     if (!oldProject) {
-      throw new Error('프로젝트를 찾을 수 없습니다.');
+      return {
+        success: false,
+        message: '프로젝트를 찾을 수 없습니다.',
+        status: 404
+      };
     }
 
     // 멤버 변경이 있는 경우
@@ -100,7 +116,11 @@ export const updateProject = async (id: string, updateData: any) => {
       .populate('author', 'name');
 
     if (!project) {
-      throw new Error('프로젝트를 찾을 수 없습니다.');
+      return {
+        success: false,
+        message: '프로젝트를 찾을 수 없습니다.',
+        status: 404
+      };
     }
     return project;
   } catch (error) {
@@ -114,7 +134,11 @@ export const deleteProject = async (id: string) => {
   try {
     const project = await Project.findById(id);
     if (!project) {
-      throw new Error('프로젝트를 찾을 수 없습니다.');
+      return {
+        success: false,
+        message: '프로젝트를 찾을 수 없습니다.',
+        status: 404
+      };
     }
 
     await User.findByIdAndUpdate(project.author, {
@@ -148,7 +172,11 @@ export const getProjectById = async (id: string) => {
     .lean();
   
   if (!project) {
-    throw new Error('프로젝트를 찾을 수 없습니다.');
+    return {
+      success: false,
+      message: '프로젝트를 찾을 수 없습니다.',
+      status: 404
+    };
   }
   return project;
 };
