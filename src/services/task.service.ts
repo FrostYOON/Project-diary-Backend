@@ -1,4 +1,4 @@
-import { Task } from "../models";
+import { Task, User } from "../models";
 import { ITask } from "../types/task.types";
 import { ApiResponse } from "../types/response.types";
 
@@ -19,7 +19,11 @@ class TaskService {
         ...taskData,
         project: taskData.projectId  // projectId를 project 필드로 매핑
       });
-      
+
+      await User.findByIdAndUpdate(taskData.author, {
+        $push: { tasks: task._id }
+      });
+
       const populatedTask = await Task.findById(task._id)
         .populate('author', 'name')
         .populate('project', 'title');
@@ -79,20 +83,10 @@ class TaskService {
   }
 
   // 업무 수정
-  async updateTask(taskId: string, taskData: any): Promise<ApiResponse> {
+  async updateTask(id: string, updateData: Partial<ITask>): Promise<ApiResponse> {
     try {
 
-      const task = await Task.findByIdAndUpdate(
-        taskId,
-        {
-          ...taskData,
-          project: taskData.projectId || taskData.project  // projectId나 project 둘 다 허용
-        },
-        { new: true }
-      )
-      .populate('author', 'name')
-      .populate('project', 'title');
-
+      const task = await Task.findById(id);
       if (!task) {
         return {
           success: false,
@@ -101,13 +95,31 @@ class TaskService {
         };
       }
 
+      // 업데이트 전 데이터 검증
+      const validUpdate = {
+        title: updateData.title,
+        description: updateData.description,
+        status: updateData.status,
+        priority: updateData.priority,
+        startDate: updateData.startDate,
+        endDate: updateData.endDate,
+        tag: updateData.tag,
+        projectId: updateData.projectId
+      };
+
+      const updatedTask = await Task.findByIdAndUpdate(
+        id,
+        { $set: validUpdate },
+        { new: true }
+      );
+
       return {
         success: true,
         message: '업무가 수정되었습니다.',
-        data: { task }
+        data: updatedTask
       };
     } catch (error) {
-      console.error('Task update service error:', error);
+      console.error('Task update error:', error);
       throw new Error('업무 수정 중 오류가 발생했습니다.');
     }
   }
@@ -115,7 +127,7 @@ class TaskService {
   // 업무 삭제
   async deleteTask(id: string): Promise<ApiResponse> {
     try {
-      const task = await Task.findByIdAndDelete(id);
+      const task = await Task.findById(id);
       if (!task) {
         return {
           success: false,
@@ -123,6 +135,13 @@ class TaskService {
           status: 404
         };
       }
+
+      await User.findByIdAndUpdate(task.author, {
+        $pull: { tasks: id }
+      });
+
+      await Task.findByIdAndDelete(id);
+
       return {
         success: true,
         message: '업무가 삭제되었습니다.'

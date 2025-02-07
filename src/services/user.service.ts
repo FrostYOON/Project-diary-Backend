@@ -106,32 +106,49 @@ class UserService {
     }
   }
 
+  // 프로필 이미지 수정
+  async updateProfileImage(userId: string, profileImage: string): Promise<ApiResponse> {
+    try {
+      const user = await User.findById(userId);
+
+      if (!user) {
+        throw new Error('사용자를 찾을 수 없습니다.');
+      }
+
+      // 서버 기본 URL 추가
+      const serverUrl = process.env.NODE_ENV === 'production' 
+        ? process.env.SERVER_URL 
+        : 'http://localhost:3001';
+      const imageUrl = `${serverUrl}${profileImage}`;
+      
+      user.profileImage = imageUrl;
+      await user.save();
+      
+      return { 
+        success: true, 
+        message: '프로필 이미지 수정 성공', 
+        data: { 
+          profileImage: imageUrl 
+        } 
+      };
+    } catch (error) {
+      throw new Error('프로필 이미지 수정 중 오류가 발생했습니다.');
+    }
+  }
+
   // 사용자 삭제
   async deleteUser(userId: string): Promise<ApiResponse> {
     try {
-      // 순차적으로 관련 데이터 삭제
-      await Promise.all([
-        // 사용자가 생성한 업무 삭제
-        Task.deleteMany({ author: userId }),
-        
-        Notification.updateMany(
-          { 
-            $or: [
-              { recipients: userId },
-              { readBy: userId }
-            ]
-          },
-          { 
-            $pull: { 
-              recipients: userId,
-              readBy: userId 
-            }
-          }
-        ),
-        
-        // 최종적으로 사용자 삭제
-        User.findByIdAndDelete(userId)
-      ]);
+      const user = await User.findById(userId);
+      if (!user) {
+        return {
+          success: false,
+          message: '사용자를 찾을 수 없습니다.',
+          status: 404
+        };
+      }
+
+      await user.deleteOne();
 
       return {
         success: true,

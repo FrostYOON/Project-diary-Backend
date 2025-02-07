@@ -19,6 +19,11 @@ export interface IUser extends Document<Types.ObjectId> {
   socialId?: string;
   role: UserRole;
   profileImage?: string;
+  authoredProjects?: Types.ObjectId[];
+  memberProjects?: Types.ObjectId[];
+  tasks?: Types.ObjectId[];
+  notifications?: Types.ObjectId[];
+  readNotifications?: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }

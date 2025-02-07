@@ -15,6 +15,8 @@ const TaskSchema: Schema<ITask> = new Schema({
   priority: { type: String, enum: TASK_PRIORITY, required: true },
   project: { type: Schema.Types.ObjectId, ref: "Project" },
   author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+}, {
+  timestamps: true
 });
 
 export default TaskSchema;
